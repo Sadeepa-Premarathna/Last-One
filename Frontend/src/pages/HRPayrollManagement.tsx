@@ -29,7 +29,6 @@ interface PayrollRecord {
   basicSalary: number;
   overtimeAmount: number;
   noPayDeductionAmount: number;
-  status: 'unpaid' | 'paid' | 'processing';
   createdAt: string;
   updatedAt: string;
 }
@@ -162,22 +161,6 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({
     } finally {
       console.log('🔄 Setting isCalculating to false');
       setIsCalculating(false);
-    }
-  };
-
-  const updatePayrollStatus = async (payrollId: string, newStatus: 'unpaid' | 'paid' | 'processing') => {
-    try {
-      const response = await axios.put(`${API_ENDPOINTS.payroll}/${payrollId}/status`, {
-        status: newStatus
-      });
-
-      if (response.data.success) {
-        // Reload data to reflect the status change
-        await loadPayrollData();
-      }
-    } catch (error) {
-      console.error('Error updating payroll status:', error);
-      setErrors(['Error updating payroll status']);
     }
   };
 
@@ -435,9 +418,6 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({
                     No Pay Deduction
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Net Payable
                   </th>
                 </tr>
@@ -475,15 +455,6 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">
                         ${record.noPayDeductionAmount.toFixed(2)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          record.status === 'paid' ? 'bg-green-100 text-green-800' :
-                          record.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
-                        </span>
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
                         ${netPayable.toFixed(2)}
                       </td>
@@ -493,7 +464,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({
               </tbody>
               <tfoot className="bg-gray-50">
                 <tr>
-                  <td className="px-6 py-4 text-sm font-bold text-gray-900" colSpan={6}>
+                  <td className="px-6 py-4 text-sm font-bold text-gray-900" colSpan={5}>
                     Total Payroll
                   </td>
                   <td className="px-6 py-4 text-sm font-bold text-green-600">

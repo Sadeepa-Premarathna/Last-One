@@ -78,8 +78,7 @@ export const generatePayrollForEmployee = async (req, res) => {
       month: month,
       basicSalary: basicSalary,
       overtimeAmount: overtimeAmount,
-      noPayDeductionAmount: noPayDeductionAmount,
-      status: 'unpaid'
+      noPayDeductionAmount: noPayDeductionAmount
     });
 
     const savedPayroll = await newPayroll.save();
@@ -191,8 +190,7 @@ export const generatePayrollBatch = async (req, res) => {
           month: month,
           basicSalary: basicSalary,
           overtimeAmount: overtimeAmount,
-          noPayDeductionAmount: noPayDeductionAmount,
-          status: 'unpaid'
+          noPayDeductionAmount: noPayDeductionAmount
         });
 
         const savedPayroll = await newPayroll.save();
@@ -232,12 +230,11 @@ export const generatePayrollBatch = async (req, res) => {
 // Get all payroll records with optional filtering
 export const getPayrolls = async (req, res) => {
   try {
-    const { month, status, employeeId, page = 1, limit = 50 } = req.query;
+    const { month, employeeId, page = 1, limit = 50 } = req.query;
     
     // Build filter object
     const filter = {};
     if (month) filter.month = month;
-    if (status) filter.status = status;
     if (employeeId) filter.employeeId = employeeId;
 
     // Calculate pagination
@@ -299,48 +296,6 @@ export const getPayrollById = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching payroll record',
-      error: error.message
-    });
-  }
-};
-
-// Update payroll status
-export const updatePayrollStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    if (!status || !['unpaid', 'paid', 'processing'].includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Valid status is required (unpaid, paid, processing)'
-      });
-    }
-
-    const updatedPayroll = await Payroll.findByIdAndUpdate(
-      id,
-      { status: status, updatedAt: new Date() },
-      { new: true }
-    ).populate('employeeId', 'name employeeId department');
-
-    if (!updatedPayroll) {
-      return res.status(404).json({
-        success: false,
-        message: 'Payroll record not found'
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Payroll status updated successfully',
-      data: updatedPayroll
-    });
-
-  } catch (error) {
-    console.error('Error updating payroll status:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error updating payroll status',
       error: error.message
     });
   }

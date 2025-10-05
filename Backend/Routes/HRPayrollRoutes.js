@@ -4,7 +4,6 @@ import {
   generatePayrollBatch,
   getPayrolls,
   getPayrollById,
-  updatePayrollStatus,
   deletePayroll
 } from '../Controllers/HRPayrollController.js';
 
@@ -21,9 +20,6 @@ router.get('/', getPayrolls);
 
 // Get specific payroll by ID
 router.get('/:id', getPayrollById);
-
-// Update payroll status
-router.put('/:id/status', updatePayrollStatus);
 
 // Delete payroll record
 router.delete('/:id', deletePayroll);

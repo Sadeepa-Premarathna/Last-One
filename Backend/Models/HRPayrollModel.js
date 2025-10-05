@@ -32,11 +32,6 @@ const PayrollSchema = new mongoose.Schema({
     min: 0,
     default: 0
   },
-  status: {
-    type: String,
-    enum: ['unpaid', 'paid', 'processing'],
-    default: 'unpaid'
-  },
   createdAt: {
     type: Date,
     default: Date.now

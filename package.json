@@ -1,0 +1,35 @@
+{
+  "name": "daily-licious",
+  "version": "1.0.0",
+  "description": "Dairy product delivery and milk collection management system",
+  "main": "server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "server": "nodemon backend/server.js",
+    "client": "npm start --prefix frontend",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "install-all": "npm install && cd frontend && npm install"
+  },
+  "keywords": [
+    "dairy",
+    "delivery",
+    "milk-collection",
+    "mern"
+  ],
+  "author": "Daily Licious",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.12.2",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^7.5.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.1",
+    "nodemon": "^3.0.1"
+  }
+}

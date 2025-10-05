@@ -1,10 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../config/api';
-import { FaPlus, FaEdit, FaTrash, FaCar, FaUser, FaPhone, FaIdCard, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaCar, FaUser, FaPhone, FaIdCard, FaMapMarkerAlt, FaFilePdf } from 'react-icons/fa';
 import Modal from '../Modal/Modal';
 import DriverForm from './DriverForm';
+import ReportButton from '../Reports/ReportButton';
 import { Driver, APIResponse } from '../../types';
+import { loadLogoAsBase64, getDairyLiciousLogoSVG } from '../../utils/logoHelper';
 import './DriverList.css';
+
+// Generate PDF Report with logo
+const generateDriverPDFReport = async (drivers: Driver[], reportType: 'all' | 'active' | 'inactive' = 'all') => {
+  const { generateDriverReport } = await import('../../utils/driverReportGenerator');
+  
+  try {
+    // Try to load actual logo image first
+    const logoUrl = await loadLogoAsBase64();
+    generateDriverReport(drivers, reportType, logoUrl);
+  } catch (error) {
+    // Fallback to SVG if image fails to load
+    console.warn('Using SVG fallback logo:', error);
+    const logoUrl = getDairyLiciousLogoSVG();
+    generateDriverReport(drivers, reportType, logoUrl);
+  }
+};
 
 const DriverList: React.FC = () => {
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -68,6 +86,33 @@ const DriverList: React.FC = () => {
           <button className="btn btn-primary" onClick={() => openModal()}>
             <FaPlus /> Add New Driver
           </button>
+        </div>
+
+        {/* Report Generation Section */}
+        <div className="report-actions">
+          <div className="report-actions-header">
+            <h3>
+              <FaFilePdf className="report-icon" />
+              Generate Reports
+            </h3>
+          </div>
+          <div className="report-actions-buttons">
+            <ReportButton
+              label="All Drivers Report"
+              onClick={() => generateDriverPDFReport(drivers, 'all')}
+              variant="primary"
+            />
+            <ReportButton
+              label="Active Drivers"
+              onClick={() => generateDriverPDFReport(drivers, 'active')}
+              variant="success"
+            />
+            <ReportButton
+              label="Inactive Drivers"
+              onClick={() => generateDriverPDFReport(drivers, 'inactive')}
+              variant="secondary"
+            />
+          </div>
         </div>
 
         {error && <div className="error-message">{error}</div>}

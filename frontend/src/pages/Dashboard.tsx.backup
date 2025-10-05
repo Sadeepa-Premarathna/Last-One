@@ -1,0 +1,266 @@
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { FaBox, FaCheckCircle, FaExclamationTriangle, FaTimesCircle, FaDollarSign, FaFileAlt, FaBrain } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { DashboardStats, Product } from '../types';
+import { productService } from '../services/api';
+import { formatCurrency } from '../utils/helpers';
+import ProductReport from '../components/ProductReport';
+import AIAnalyzer from '../components/AIAnalyzer';
+import './Dashboard.css';
+
+const Dashboard = () => {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showReport, setShowReport] = useState(false);
+  const [showAIAnalyzer, setShowAIAnalyzer] = useState(false);
+  const [reportProducts, setReportProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [reportType, setReportType] = useState<'all' | 'expiring' | 'lowstock'>('all');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      const data = await productService.getDashboardStats();
+      setStats(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const statCards = [
+    {
+      title: 'Total Products',
+      value: stats?.totalProducts || 0,
+      icon: <FaBox />,
+      color: '#667eea',
+      bgColor: 'rgba(102, 126, 234, 0.1)'
+    },
+    {
+      title: 'Active Products',
+      value: stats?.activeProducts || 0,
+      icon: <FaCheckCircle />,
+      color: '#10b981',
+      bgColor: 'rgba(16, 185, 129, 0.1)'
+    },
+    {
+      title: 'Low Stock Items',
+      value: stats?.lowStockProducts || 0,
+      icon: <FaExclamationTriangle />,
+      color: '#f59e0b',
+      bgColor: 'rgba(245, 158, 11, 0.1)'
+    },
+    {
+      title: 'Expired Products',
+      value: stats?.expiredProducts || 0,
+      icon: <FaTimesCircle />,
+      color: '#ef4444',
+      bgColor: 'rgba(239, 68, 68, 0.1)'
+    }
+  ];
+
+  return (
+    <div className="dashboard-page">
+      <motion.div
+        className="dashboard-header"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div>
+          <h1>🥛 Dairy Licious Dashboard</h1>
+          <p>Welcome to your inventory management system</p>
+        </div>
+      </motion.div>
+
+      {loading ? (
+        <div className="loading-container">
+          <motion.div
+            className="loading-spinner"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          />
+          <p>Loading dashboard...</p>
+        </div>
+      ) : (
+        <>
+          <motion.div
+            className="stats-grid"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            {statCards.map((card, index) => (
+              <motion.div
+                key={card.title}
+                className="stat-card"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 + 0.3 }}
+                whileHover={{ y: -5, boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}
+              >
+                <div className="stat-icon" style={{ backgroundColor: card.bgColor, color: card.color }}>
+                  {card.icon}
+                </div>
+                <div className="stat-info">
+                  <h3>{card.title}</h3>
+                  <motion.p
+                    className="stat-value"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: index * 0.1 + 0.5, type: 'spring' }}
+                  >
+                    {card.value}
+                  </motion.p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <motion.div
+            className="inventory-value-card"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            whileHover={{ y: -5, boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}
+          >
+            <div className="value-icon">
+              <FaDollarSign />
+            </div>
+            <div className="value-info">
+              <h3>Total Inventory Value</h3>
+              <motion.p
+                className="value-amount"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.9, type: 'spring' }}
+              >
+                {formatCurrency(stats?.totalInventoryValue || 0)}
+              </motion.p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            className="quick-actions"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1 }}
+          >
+            <h2>Quick Actions</h2>
+            <div className="actions-grid">
+              <motion.button
+                className="action-btn view-products"
+                onClick={() => navigate('/products')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FaBox />
+                <span>View All Products</span>
+              </motion.button>
+
+              <motion.button
+                className="action-btn generate-report"
+                onClick={async () => {
+                  const products = await productService.getAllProducts();
+                  setReportProducts(products);
+                  setReportType('all');
+                  setShowReport(true);
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FaFileAlt />
+                <span>Generate Full Report</span>
+              </motion.button>
+
+              <motion.button
+                className="action-btn ai-analyze"
+                onClick={async () => {
+                  const products = await productService.getAllProducts();
+                  setAllProducts(products);
+                  setShowAIAnalyzer(true);
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FaBrain />
+                <span>Licious AI Analysis</span>
+              </motion.button>
+
+              {stats && stats.lowStockProducts > 0 && (
+                <motion.button
+                  className="action-btn low-stock"
+                  onClick={() => navigate('/products')}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.2 }}
+                >
+                  <FaExclamationTriangle />
+                  <span>Check Low Stock Items</span>
+                </motion.button>
+              )}
+
+              {stats && stats.expiredProducts > 0 && (
+                <motion.button
+                  className="action-btn expired"
+                  onClick={() => navigate('/products')}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.4 }}
+                >
+                  <FaTimesCircle />
+                  <span>Review Expired Products</span>
+                </motion.button>
+              )}
+            </div>
+          </motion.div>
+
+          <motion.div
+            className="company-banner"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1.6 }}
+          >
+            <div className="banner-content">
+              <h2>🇱🇰 Dairy Licious</h2>
+              <p>Sri Lanka's Premier Dairy Products Manufacturer</p>
+              <div className="banner-features">
+                <span>✓ Quality Assured</span>
+                <span>✓ Fresh Daily</span>
+                <span>✓ Island-wide Delivery</span>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+
+      {showReport && (
+        <ProductReport
+          products={reportProducts}
+          reportType={reportType}
+          onClose={() => setShowReport(false)}
+        />
+      )}
+
+      {showAIAnalyzer && (
+        <AIAnalyzer
+          products={allProducts}
+          onClose={() => setShowAIAnalyzer(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default Dashboard;

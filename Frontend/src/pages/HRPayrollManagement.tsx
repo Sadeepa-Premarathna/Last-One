@@ -1,29 +1,24 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Calculator, 
-  Lock, 
   Download, 
   Settings, 
   AlertCircle, 
-  CheckCircle, 
   DollarSign,
   Clock,
   Users,
-  FileText,
-  Eye,
-  Edit,
-  Save,
-  X
+  FileText
 } from 'lucide-react';
-import { Employee, AttendanceRecord } from '../types';
+
 import { API_ENDPOINTS } from '../config/api';
+import { formatCurrency, formatCurrencyForCSV } from '../utils/currency';
 import PayrollConfigModal from '../components/HRPayrollConfigModal';
 import PayrollHistoryModal from '../components/HRPayrollHistoryModal';
 
 interface PayrollRecord {
   _id: string;
-  employeeId: string;
+  employeeIdDisplay: string;
   employeeName: string;
   month: string;
   basicSalary: number;
@@ -46,16 +41,14 @@ interface PayrollConfig {
 }
 
 interface PayrollManagementProps {
-  employees: Employee[];
-  attendanceRecords: AttendanceRecord[];
   onPayrollUpdate: (totalExpense: number) => void;
 }
 
 const PayrollManagement: React.FC<PayrollManagementProps> = ({ 
-  employees, 
-  attendanceRecords, 
   onPayrollUpdate 
 }) => {
+  console.log('🏗️ PayrollManagement component is mounting/rendering');
+  
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([]);
@@ -65,6 +58,15 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({
   const [isCalculating, setIsCalculating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  
+  console.log('📊 PayrollManagement state:', {
+    selectedMonth,
+    selectedYear,
+    payrollRecordsCount: payrollRecords.length,
+    payrollStatus,
+    isCalculating,
+    errors: errors.length
+  });
 
   const [payrollConfig, setPayrollConfig] = useState<PayrollConfig>({
     epfRate: 8.0, // 8% EPF
@@ -87,9 +89,14 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({
   const loadPayrollData = async () => {
     try {
       const monthParam = `${selectedYear}-${(selectedMonth + 1).toString().padStart(2, '0')}`;
+      console.log('🔄 Loading payroll data for month:', monthParam);
+      console.log('🔄 API Endpoint:', `${API_ENDPOINTS.payroll}?month=${monthParam}`);
+      
       const response = await axios.get(`${API_ENDPOINTS.payroll}?month=${monthParam}`);
+      console.log('📊 Payroll API Response:', response.data);
       
       if (response.data.success) {
+        console.log('✅ Setting payroll records:', response.data.data);
         setPayrollRecords(response.data.data);
         setPayrollStatus('loaded');
         
@@ -97,11 +104,18 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({
         const totalExpense = response.data.data.reduce((sum: number, record: PayrollRecord) => 
           sum + (record.basicSalary + record.overtimeAmount - record.noPayDeductionAmount), 0
         );
+        console.log('💰 Total payroll expense:', totalExpense);
         onPayrollUpdate(totalExpense);
+      } else {
+        console.warn('⚠️ API returned success:false:', response.data);
+        setPayrollRecords([]);
+        setPayrollStatus('draft');
       }
     } catch (error) {
-      console.error('Error loading payroll data:', error);
+      console.error('❌ Error loading payroll data:', error);
       setErrors(['Error loading payroll data from database']);
+      setPayrollRecords([]);
+      setPayrollStatus('draft');
     }
   };
 
@@ -172,23 +186,22 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({
       
       // Generate CSV for export
       const headers = [
-        'Employee ID', 'Employee Name', 'Month', 'Basic Salary', 
-        'Overtime Amount', 'No Pay Deduction', 'Net Payable'
+        'Employee ID', 'Employee Name', 'Month', 'Basic Salary (LKR)', 
+        'Overtime Amount (LKR)', 'No Pay Deduction (LKR)', 'Net Payable (LKR)'
       ];
       
       const csvContent = [
         headers.join(','),
         ...payrollRecords.map(record => {
-          const employee = employees.find(emp => emp.id === record.employeeId);
           const netPayable = record.basicSalary + record.overtimeAmount - record.noPayDeductionAmount;
           return [
-            employee?.employeeId || '',
+            record.employeeIdDisplay || '',
             record.employeeName,
             record.month,
-            record.basicSalary.toFixed(2),
-            record.overtimeAmount.toFixed(2),
-            record.noPayDeductionAmount.toFixed(2),
-            netPayable.toFixed(2)
+            formatCurrencyForCSV(record.basicSalary),
+            formatCurrencyForCSV(record.overtimeAmount),
+            formatCurrencyForCSV(record.noPayDeductionAmount),
+            formatCurrencyForCSV(netPayable)
           ].join(',');
         })
       ].join('\n');
@@ -311,7 +324,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm font-medium">Total Payroll</p>
-              <p className="text-2xl font-bold text-green-600">${totalPayroll.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-green-600">{formatCurrency(totalPayroll)}</p>
             </div>
             <div className="p-3 rounded-full bg-green-100">
               <DollarSign className="h-6 w-6 text-green-600" />
@@ -323,7 +336,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm font-medium">Overtime Amount</p>
-              <p className="text-2xl font-bold text-orange-600">${totalOvertimeAmount.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-orange-600">{formatCurrency(totalOvertimeAmount)}</p>
             </div>
             <div className="p-3 rounded-full bg-orange-100">
               <Clock className="h-6 w-6 text-orange-600" />
@@ -335,7 +348,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm font-medium">Total Deductions</p>
-              <p className="text-2xl font-bold text-red-600">${totalDeductions.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-red-600">{formatCurrency(totalDeductions)}</p>
             </div>
             <div className="p-3 rounded-full bg-red-100">
               <DollarSign className="h-6 w-6 text-red-600" />
@@ -406,6 +419,9 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({
               <thead className="bg-gray-50 sticky top-0">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Employee ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Employee
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -434,6 +450,11 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({
                       }`}
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-blue-600">
+                          {record.employeeIdDisplay}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="h-8 w-8 bg-blue-900 rounded-full flex items-center justify-center">
                             <span className="text-white text-sm font-medium">
@@ -447,16 +468,16 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${record.basicSalary.toLocaleString()}
+                        {formatCurrency(record.basicSalary)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${record.overtimeAmount.toFixed(2)}
+                        {formatCurrency(record.overtimeAmount)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">
-                        ${record.noPayDeductionAmount.toFixed(2)}
+                        {formatCurrency(record.noPayDeductionAmount)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
-                        ${netPayable.toFixed(2)}
+                        {formatCurrency(netPayable)}
                       </td>
                     </tr>
                   );

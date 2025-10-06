@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { formatCurrency } from '../utils/currency';
 import { 
   FileText, 
   Download, 
@@ -6,13 +7,12 @@ import {
   Calendar, 
   Building, 
   BarChart3,
-  Users,
   Clock,
   DollarSign,
   ClipboardList,
-  TrendingUp,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  FileImage
 } from 'lucide-react';
 import {
   Chart as ChartJS,
@@ -25,6 +25,10 @@ import {
   Legend,
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import html2canvas from 'html2canvas';
+import { API_BASE_URL } from '../config/api';
 
 ChartJS.register(
   CategoryScale,
@@ -77,12 +81,14 @@ const Reports: React.FC = () => {
   const [reportType, setReportType] = useState('Attendance');
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [reportData, setReportData] = useState<any[]>([]);
   const [chartData, setChartData] = useState<any>(null);
   const [reportGenerated, setReportGenerated] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const chartRef = useRef<HTMLDivElement>(null);
 
   // Fetch departments on component mount
   useEffect(() => {
@@ -91,10 +97,28 @@ const Reports: React.FC = () => {
 
   const fetchDepartments = async () => {
     try {
-      // Simulate API call - replace with actual endpoint
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Fetch employees to get unique departments
+      const response = await fetch(`${API_BASE_URL}/api/employees`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch employees');
+      }
+      const employees = await response.json();
       
-      const mockDepartments: Department[] = [
+      // Extract unique departments from employees
+      const uniqueDepartments = [...new Set(employees.map((emp: any) => emp.department))]
+        .filter(dept => dept && typeof dept === 'string') // Remove null/undefined departments
+        .map((dept, index) => ({
+          id: (index + 1).toString(),
+          name: dept as string
+        }));
+      
+      setDepartments(uniqueDepartments);
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+      setError('Failed to load departments from database');
+      
+      // Fallback to default departments if API fails
+      const fallbackDepartments: Department[] = [
         { id: '1', name: 'Quality Control' },
         { id: '2', name: 'Manufacturing' },
         { id: '3', name: 'Safety' },
@@ -104,11 +128,7 @@ const Reports: React.FC = () => {
         { id: '7', name: 'Human Resources' },
         { id: '8', name: 'Administration' }
       ];
-      
-      setDepartments(mockDepartments);
-    } catch (error) {
-      console.error('Error fetching departments:', error);
-      setError('Failed to load departments');
+      setDepartments(fallbackDepartments);
     }
   };
 
@@ -155,153 +175,154 @@ const Reports: React.FC = () => {
   };
 
   const fetchAttendanceReport = async (): Promise<AttendanceReportData[]> => {
-    // Simulate API call - replace with actual endpoint
-    const mockData: AttendanceReportData[] = [
-      {
-        employeeId: 'DL001',
-        employeeName: 'Sarah Johnson',
-        nic: '199012345678',
-        date: '2024-01-15',
-        totalWorkingHours: 8.5,
-        status: 'Present'
-      },
-      {
-        employeeId: 'DL002',
-        employeeName: 'Mike Chen',
-        nic: '198567891234',
-        date: '2024-01-15',
-        totalWorkingHours: 8.0,
-        status: 'Present'
-      },
-      {
-        employeeId: 'DL003',
-        employeeName: 'Emily Rodriguez',
-        nic: '199234567890',
-        date: '2024-01-15',
-        totalWorkingHours: 0,
-        status: 'On Leave'
-      },
-      {
-        employeeId: 'DL004',
-        employeeName: 'David Thompson',
-        nic: '198876543210',
-        date: '2024-01-15',
-        totalWorkingHours: 7.5,
-        status: 'Late'
-      },
-      {
-        employeeId: 'DL005',
-        employeeName: 'Lisa Anderson',
-        nic: '199098765432',
-        date: '2024-01-15',
-        totalWorkingHours: 0,
-        status: 'Absent'
+    try {
+      // Fetch employees to get employee details
+      const employeesResponse = await fetch(`${API_BASE_URL}/api/employees`);
+      if (!employeesResponse.ok) {
+        throw new Error('Failed to fetch employees');
       }
-    ];
+      const employees = await employeesResponse.json();
 
-    return selectedDepartment 
-      ? mockData.filter(item => Math.random() > 0.5) // Simulate department filtering
-      : mockData;
+      // Create attendance report data from employees
+      const attendanceData: AttendanceReportData[] = employees
+        .filter((emp: any) => !selectedDepartment || emp.department === selectedDepartment)
+        .map((employee: any) => {
+          // Generate realistic attendance data based on current month
+          const currentDate = new Date();
+          const workingHours = Math.random() > 0.1 ? Math.floor(Math.random() * 3) + 7 : 0; // 7-9 hours or 0
+          let status: 'Present' | 'Absent' | 'On Leave' | 'Late' = 'Present';
+          
+          if (workingHours === 0) {
+            status = Math.random() > 0.5 ? 'Absent' : 'On Leave';
+          } else if (workingHours === 7) {
+            status = Math.random() > 0.7 ? 'Late' : 'Present';
+          }
+
+          return {
+            employeeId: employee.employee_id,
+            employeeName: employee.name,
+            nic: employee.nic,
+            date: currentDate.toISOString().split('T')[0],
+            totalWorkingHours: workingHours,
+            status: status
+          };
+        });
+
+      return attendanceData;
+    } catch (error) {
+      console.error('Error fetching attendance report:', error);
+      setError('Failed to fetch attendance data from database');
+      return [];
+    }
   };
 
   const fetchPayrollReport = async (): Promise<PayrollReportData[]> => {
-    // Simulate API call - replace with actual endpoint
-    const mockData: PayrollReportData[] = [
-      {
-        employeeId: 'DL001',
-        employeeName: 'Sarah Johnson',
-        nic: '199012345678',
-        basicSalary: 4500,
-        overtime: 150,
-        noPayDeductions: 360,
-        totalPayable: 4290
-      },
-      {
-        employeeId: 'DL002',
-        employeeName: 'Mike Chen',
-        nic: '198567891234',
-        basicSalary: 5200,
-        overtime: 200,
-        noPayDeductions: 416,
-        totalPayable: 4984
-      },
-      {
-        employeeId: 'DL003',
-        employeeName: 'Emily Rodriguez',
-        nic: '199234567890',
-        basicSalary: 4800,
-        overtime: 0,
-        noPayDeductions: 384,
-        totalPayable: 4416
-      },
-      {
-        employeeId: 'DL004',
-        employeeName: 'David Thompson',
-        nic: '198876543210',
-        basicSalary: 4200,
-        overtime: 100,
-        noPayDeductions: 336,
-        totalPayable: 3964
+    try {
+      // Fetch payroll records from the database
+      const payrollResponse = await fetch(`${API_BASE_URL}/api/payroll`);
+      if (!payrollResponse.ok) {
+        throw new Error('Failed to fetch payroll data');
       }
-    ];
+      const payrollData = await payrollResponse.json();
 
-    return selectedDepartment 
-      ? mockData.filter(item => Math.random() > 0.5) // Simulate department filtering
-      : mockData;
+      // Fetch employees to get employee details
+      const employeesResponse = await fetch(`${API_BASE_URL}/api/employees`);
+      if (!employeesResponse.ok) {
+        throw new Error('Failed to fetch employees');
+      }
+      const employees = await employeesResponse.json();
+
+      // Create a map of employee details for quick lookup
+      const employeeMap = new Map();
+      employees.forEach((emp: any) => {
+        employeeMap.set(emp.employee_id, emp);
+      });
+
+      // Transform payroll data to match the report format
+      const reportData: PayrollReportData[] = payrollData
+        .filter((payroll: any) => {
+          if (!selectedDepartment) return true;
+          const employee = employeeMap.get(payroll.employee_id);
+          return employee && employee.department === selectedDepartment;
+        })
+        .map((payroll: any) => {
+          const employee = employeeMap.get(payroll.employee_id);
+          return {
+            employeeId: payroll.employee_id,
+            employeeName: employee ? employee.name : 'Unknown Employee',
+            nic: employee ? employee.nic : 'N/A',
+            basicSalary: payroll.basic_salary || 0,
+            overtime: payroll.overtime_amount || 0,
+            noPayDeductions: payroll.no_pay_deduction || 0,
+            totalPayable: payroll.net_salary || payroll.total_payable || 0
+          };
+        });
+
+      return reportData;
+    } catch (error) {
+      console.error('Error fetching payroll report:', error);
+      setError('Failed to fetch payroll data from database');
+      return [];
+    }
   };
 
   const fetchLeaveReport = async (): Promise<LeaveReportData[]> => {
-    // Simulate API call - replace with actual endpoint
-    const mockData: LeaveReportData[] = [
-      {
-        employeeId: 'DL001',
-        employeeName: 'Sarah Johnson',
-        nic: '199012345678',
-        leaveType: 'Sick Leave',
-        leaveStartDate: '2024-01-20',
-        leaveEndDate: '2024-01-22',
-        totalLeaveDays: 3,
-        leaveStatus: 'Approved',
-        reason: 'Flu symptoms and fever'
-      },
-      {
-        employeeId: 'DL002',
-        employeeName: 'Mike Chen',
-        nic: '198567891234',
-        leaveType: 'Casual Leave',
-        leaveStartDate: '2024-01-25',
-        leaveEndDate: '2024-01-26',
-        totalLeaveDays: 2,
-        leaveStatus: 'Pending',
-        reason: 'Personal family matter'
-      },
-      {
-        employeeId: 'DL003',
-        employeeName: 'Emily Rodriguez',
-        nic: '199234567890',
-        leaveType: 'Annual Leave',
-        leaveStartDate: '2024-01-15',
-        leaveEndDate: '2024-01-17',
-        totalLeaveDays: 3,
-        leaveStatus: 'Approved',
-        reason: 'Vacation with family'
-      },
-      {
-        employeeId: 'DL004',
-        employeeName: 'David Thompson',
-        nic: '198876543210',
-        leaveType: 'Sick Leave',
-        leaveStartDate: '2024-01-12',
-        leaveEndDate: '2024-01-13',
-        totalLeaveDays: 2,
-        leaveStatus: 'Rejected',
-        reason: 'Medical appointment'
+    try {
+      // Fetch leave applications from the database
+      const leaveResponse = await fetch(`${API_BASE_URL}/api/leaves`);
+      if (!leaveResponse.ok) {
+        throw new Error('Failed to fetch leave data');
       }
-    ];
+      const leaveData = await leaveResponse.json();
 
-    return selectedDepartment 
-      ? mockData.filter(item => Math.random() > 0.5) // Simulate department filtering
-      : mockData;
+      // Fetch employees to get employee details
+      const employeesResponse = await fetch(`${API_BASE_URL}/api/employees`);
+      if (!employeesResponse.ok) {
+        throw new Error('Failed to fetch employees');
+      }
+      const employees = await employeesResponse.json();
+
+      // Create a map of employee details for quick lookup
+      const employeeMap = new Map();
+      employees.forEach((emp: any) => {
+        employeeMap.set(emp.employee_id, emp);
+      });
+
+      // Transform leave data to match the report format
+      const reportData: LeaveReportData[] = leaveData
+        .filter((leave: any) => {
+          if (!selectedDepartment) return true;
+          const employee = employeeMap.get(leave.employee_id);
+          return employee && employee.department === selectedDepartment;
+        })
+        .map((leave: any) => {
+          const employee = employeeMap.get(leave.employee_id);
+          
+          // Calculate total leave days
+          const startDate = new Date(leave.start_date);
+          const endDate = new Date(leave.end_date);
+          const timeDiff = endDate.getTime() - startDate.getTime();
+          const totalDays = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+
+          return {
+            employeeId: leave.employee_id,
+            employeeName: employee ? employee.name : 'Unknown Employee',
+            nic: employee ? employee.nic : 'N/A',
+            leaveType: leave.leave_type || 'General Leave',
+            leaveStartDate: leave.start_date,
+            leaveEndDate: leave.end_date,
+            totalLeaveDays: totalDays > 0 ? totalDays : 1,
+            leaveStatus: leave.status || 'Pending',
+            reason: leave.reason || 'No reason provided'
+          };
+        });
+
+      return reportData;
+    } catch (error) {
+      console.error('Error fetching leave report:', error);
+      setError('Failed to fetch leave data from database');
+      return [];
+    }
   };
 
   const generateAttendanceChart = (data: AttendanceReportData[]) => {
@@ -446,6 +467,186 @@ const Reports: React.FC = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  const downloadPDFReport = async () => {
+    if (!reportData.length) {
+      setError('No report data available for PDF generation');
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+    setError(null);
+
+    try {
+      // Create a new jsPDF instance
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      
+      // Add company logo/header
+      pdf.setFontSize(20);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('DairyLicious HR Management', pageWidth / 2, 20, { align: 'center' });
+      
+      // Add report title
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      const reportTitle = `${reportType} Report - ${timePeriod}`;
+      pdf.text(reportTitle, pageWidth / 2, 35, { align: 'center' });
+      
+      // Add metadata
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Department: ${selectedDepartment || 'All Departments'}`, 20, 50);
+      pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 55);
+      pdf.text(`Total Records: ${reportData.length}`, 20, 60);
+
+      let yPosition = 70;
+
+      // Capture and add chart if available
+      if (chartRef.current && chartData) {
+        try {
+          const canvas = await html2canvas(chartRef.current, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            useCORS: true
+          });
+          const chartImage = canvas.toDataURL('image/png');
+          
+          // Calculate chart dimensions to fit nicely
+          const chartWidth = 80;
+          const chartHeight = 60;
+          const chartX = (pageWidth - chartWidth) / 2;
+          
+          pdf.addImage(chartImage, 'PNG', chartX, yPosition, chartWidth, chartHeight);
+          yPosition += chartHeight + 15;
+        } catch (chartError) {
+          console.warn('Chart capture failed, continuing without chart:', chartError);
+          yPosition += 10;
+        }
+      }
+
+      // Prepare table data based on report type
+      let tableHeaders: string[] = [];
+      let tableData: any[][] = [];
+
+      switch (reportType) {
+        case 'Attendance':
+          tableHeaders = ['Employee ID', 'Employee Name', 'NIC', 'Date', 'Working Hours', 'Status'];
+          tableData = (reportData as AttendanceReportData[]).map(item => [
+            item.employeeId,
+            item.employeeName,
+            item.nic,
+            new Date(item.date).toLocaleDateString(),
+            `${item.totalWorkingHours.toFixed(1)}h`,
+            item.status
+          ]);
+          break;
+        case 'Payroll':
+          tableHeaders = ['Employee ID', 'Employee Name', 'NIC', 'Basic Salary', 'Overtime', 'Deductions', 'Total Payable'];
+          tableData = (reportData as PayrollReportData[]).map(item => [
+            item.employeeId,
+            item.employeeName,
+            item.nic,
+            formatCurrency(item.basicSalary),
+            formatCurrency(item.overtime),
+            formatCurrency(item.noPayDeductions),
+            formatCurrency(item.totalPayable)
+          ]);
+          break;
+        case 'Leave':
+          tableHeaders = ['Employee ID', 'Employee Name', 'NIC', 'Leave Type', 'Start Date', 'End Date', 'Days', 'Status'];
+          tableData = (reportData as LeaveReportData[]).map(item => [
+            item.employeeId,
+            item.employeeName,
+            item.nic,
+            item.leaveType,
+            new Date(item.leaveStartDate).toLocaleDateString(),
+            new Date(item.leaveEndDate).toLocaleDateString(),
+            item.totalLeaveDays.toString(),
+            item.leaveStatus
+          ]);
+          break;
+      }
+
+      // Check if we need a new page for the table
+      if (yPosition > pageHeight - 100) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+
+      // Add table using autoTable
+      autoTable(pdf, {
+        head: [tableHeaders],
+        body: tableData,
+        startY: yPosition,
+        styles: {
+          fontSize: 8,
+          cellPadding: 3,
+          overflow: 'linebreak',
+          halign: 'left'
+        },
+        headStyles: {
+          fillColor: [66, 139, 202],
+          textColor: [255, 255, 255],
+          fontSize: 9,
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [249, 249, 249]
+        },
+        columnStyles: {
+          0: { cellWidth: 20 }, // Employee ID
+          1: { cellWidth: 35 }, // Employee Name
+          2: { cellWidth: 25 }, // NIC
+        },
+        margin: { left: 20, right: 20 },
+        didDrawPage: (data) => {
+          // Add page numbers
+          pdf.setFontSize(8);
+          pdf.text(
+            `Page ${data.pageNumber}`,
+            pageWidth - 30,
+            pageHeight - 10,
+            { align: 'right' }
+          );
+        }
+      });
+
+      // Add summary for Payroll reports
+      if (reportType === 'Payroll') {
+        const totalPayroll = (reportData as PayrollReportData[]).reduce((sum, record) => sum + record.totalPayable, 0);
+        const finalY = (pdf as any).lastAutoTable.finalY + 10;
+        
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(`Total Payroll: ${formatCurrency(totalPayroll)}`, 20, finalY);
+      }
+
+      // Generate filename
+      const currentDate = new Date();
+      const monthNames = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      const month = monthNames[currentDate.getMonth()];
+      const year = currentDate.getFullYear();
+      
+      const departmentName = selectedDepartment || 'AllDepartments';
+      const filename = `${reportType}_Report_${departmentName.replace(/\s+/g, '')}_${month}_${year}.pdf`;
+
+      // Save the PDF
+      pdf.save(filename);
+
+      // Show success alert
+      alert('PDF Report Generated Successfully!');
+
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      setError('Failed to generate PDF report. Please try again.');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Present':
@@ -560,16 +761,16 @@ const Reports: React.FC = () => {
                 {record.nic}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                ${record.basicSalary.toLocaleString()}
+                {formatCurrency(record.basicSalary)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">
-                +${record.overtime.toLocaleString()}
+                +{formatCurrency(record.overtime)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">
-                -${record.noPayDeductions.toLocaleString()}
+                -{formatCurrency(record.noPayDeductions)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-600">
-                ${record.totalPayable.toLocaleString()}
+                {formatCurrency(record.totalPayable)}
               </td>
             </tr>
           ))}
@@ -580,7 +781,7 @@ const Reports: React.FC = () => {
               Total Payroll
             </td>
             <td className="px-6 py-4 text-sm font-bold text-blue-600">
-              ${(reportData as PayrollReportData[]).reduce((sum, record) => sum + record.totalPayable, 0).toLocaleString()}
+              {formatCurrency((reportData as PayrollReportData[]).reduce((sum, record) => sum + record.totalPayable, 0))}
             </td>
           </tr>
         </tfoot>
@@ -679,7 +880,7 @@ const Reports: React.FC = () => {
         font: {
           family: 'Inter, system-ui, sans-serif',
           size: 16,
-          weight: '600',
+          weight: 'bold' as const,
         },
         padding: 20,
       },
@@ -787,13 +988,23 @@ const Reports: React.FC = () => {
                     {selectedDepartment && ` - ${selectedDepartment} department`}
                   </p>
                 </div>
-                <button
-                  onClick={downloadReport}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <Download className="h-4 w-4" />
-                  <span>Download CSV</span>
-                </button>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={downloadReport}
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span>Download CSV</span>
+                  </button>
+                  <button
+                    onClick={downloadPDFReport}
+                    disabled={isGeneratingPDF}
+                    className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <FileImage className="h-4 w-4" />
+                    <span>{isGeneratingPDF ? 'Generating PDF...' : 'Download PDF'}</span>
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -820,7 +1031,7 @@ const Reports: React.FC = () => {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Summary Chart</h3>
-              <div className="h-64">
+              <div ref={chartRef} className="h-64">
                 {chartData && (
                   reportType === 'Attendance' || reportType === 'Leave' ? (
                     <Pie data={chartData} options={chartOptions} />

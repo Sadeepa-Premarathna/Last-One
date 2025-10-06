@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { formatCurrency } from '../utils/currency';
 import { X, FileText, Download, Eye, Calendar } from 'lucide-react';
 
 interface PayrollHistoryRecord {
@@ -78,7 +79,7 @@ const PayrollHistoryModal: React.FC<PayrollHistoryModalProps> = ({ onClose }) =>
 
   const downloadPayrollReport = (record: PayrollHistoryRecord) => {
     // Simulate downloading a payroll report
-    const csvContent = `Payroll Report - ${record.month} ${record.year}\n\nTotal Employees: ${record.totalEmployees}\nTotal Payroll: $${record.totalPayroll.toLocaleString()}\nExported: ${new Date(record.exportedAt).toLocaleDateString()}\nExported By: ${record.exportedBy}`;
+    const csvContent = `Payroll Report - ${record.month} ${record.year}\n\nTotal Employees: ${record.totalEmployees}\nTotal Payroll: ${formatCurrency(record.totalPayroll)}\nExported: ${new Date(record.exportedAt).toLocaleDateString()}\nExported By: ${record.exportedBy}`;
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -175,7 +176,7 @@ const PayrollHistoryModal: React.FC<PayrollHistoryModalProps> = ({ onClose }) =>
                         {record.totalEmployees}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
-                        ${record.totalPayroll.toLocaleString()}
+                        {formatCurrency(record.totalPayroll)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(record.status)}`}>
@@ -237,7 +238,7 @@ const PayrollHistoryModal: React.FC<PayrollHistoryModalProps> = ({ onClose }) =>
                 <div>
                   <span className="text-gray-600">Total Payroll:</span>
                   <span className="ml-2 font-medium text-green-600">
-                    ${filteredRecords.reduce((sum, r) => sum + r.totalPayroll, 0).toLocaleString()}
+                    {formatCurrency(filteredRecords.reduce((sum, r) => sum + r.totalPayroll, 0))}
                   </span>
                 </div>
               </div>

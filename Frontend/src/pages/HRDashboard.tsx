@@ -19,11 +19,10 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ data }) => {
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return `LKR ${amount.toLocaleString('en-LK', {
       minimumFractionDigits: 0,
-    }).format(amount);
+      maximumFractionDigits: 0
+    })}`;
   };
 
   return (

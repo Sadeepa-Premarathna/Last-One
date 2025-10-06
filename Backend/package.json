@@ -1,26 +1,24 @@
 {
-  "name": "dairylicious-backend",
-  "version": "1.0.0",
-  "description": "Backend for DairyLicious employee management system",
-  "type": "module",
-  "main": "app.js",
-  "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": ["express", "mongodb", "attendance", "employee"],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "express": "^4.18.2",
-    "mongoose": "^7.5.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
-  }
+	"name": "hrmanagement-backend",
+	"version": "1.0.0",
+	"description": "HR Management backend API",
+	"type": "module",
+	"main": "HRApp.js",
+	"scripts": {
+		"dev": "nodemon HRApp.js",
+		"start": "node HRApp.js"
+	},
+	"dependencies": {
+		"axios": "^1.12.2",
+		"cors": "^2.8.5",
+		"dotenv": "^16.4.5",
+		"express": "^4.19.2",
+		"joi": "^18.0.1",
+		"mongoose": "^8.6.1",
+		"node-fetch": "^3.3.2",
+		"uuid": "^13.0.0"
+	},
+	"devDependencies": {
+		"nodemon": "^3.1.4"
+	}
 }

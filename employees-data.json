@@ -1,0 +1,23 @@
+[
+  {
+    "_id": "7f3936e8-fef2-4c7a-b8d6-29e05c98e9b4",
+    "employee_id": "EMP0027",
+    "name": "Rashmini kavindya",
+    "NIC": "1999345676",
+    "email": "rashminikavindya@gmail.com",
+    "phone": "0713459877",
+    "role": "developer",
+    "date_of_birth": "1989-10-17T00:00:00.000Z",
+    "salary": 300000,
+    "basic_salary": 300000,
+    "status": "Active",
+    "department": "Manufacturing",
+    "join_date": "2025-10-01T00:00:00.000Z",
+    "address": "",
+    "gender": "Female",
+    "epfEligible": true,
+    "etfEligible": true,
+    "created_at": "2025-10-02T03:40:50.744Z",
+    "updated_at": "2025-10-02T03:40:50.744Z"
+  }
+]

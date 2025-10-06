@@ -9,6 +9,7 @@ import path from 'path';
 import EmployeeRoutes from './Routes/HREmployeeRoutes.js';
 import LeaveRoutes from './Routes/HRLeaveRoutes.js';
 import PayrollRoutes from './Routes/HRPayrollRoutes.js';
+import AttendanceRoutes from './Routes/HRAttendanceRoutes.js';
 import Employee from './Models/HREmployeeModel.js';
 
 dotenv.config();
@@ -32,6 +33,7 @@ app.get('/health', (_req, res) => {
 app.use('/api/employees', EmployeeRoutes);
 app.use('/api/leaves', LeaveRoutes);
 app.use('/api/payroll', PayrollRoutes);
+app.use('/api/attendance', AttendanceRoutes);
 
 const PORT = process.env.PORT || 8003;
 const MONGODB_URI = process.env.MONGODB_URI; 

@@ -1,165 +1,69 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const session = require('express-session');
-const MongoStore = require('connect-mongo');
-const dotenv = require('dotenv');
-
-// Load environment variables
-dotenv.config();
-
-// Import routes
-const productRoutes = require('./Routes/productRoutes');
-const cartRoutes = require('./Routes/cartRoutes');
-const orderRoutes = require('./Routes/orderRoutes');
-const userRoutes = require('./Routes/userRoutes');
-const chatbotRoutes = require('./Routes/chatbotRoutes');
+import express from 'express';
+import mongoose from 'mongoose';
+import 'dotenv/config';
+import AdditionalExpensesRoutes from './Routes/finance_AdditionalExpensesRoutes.js';
+import AllowanceRoutes from './Routes/AllowanceRoutes.js';
+import SalarySlipRoutes from './Routes/salarySlipRoutes.js';
 
 const app = express();
 
-// Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
-}));
+// CORS middleware
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use('/api/additional-expenses', AdditionalExpensesRoutes);
+app.use('/api/allowances', AllowanceRoutes);
+app.use('/api/salary-slip', SalarySlipRoutes);
 
-// Session configuration with better error handling
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-session-secret',
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/dairy-shop',
-    touchAfter: 24 * 3600, // lazy session update
-    ttl: 14 * 24 * 60 * 60, // = 14 days. Default
-  }),
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
-  }
-}));
+if (!process.env.MONGODB_URI) {
+    console.error("Missing MONGODB_URI environment variable. Create a .env file with MONGODB_URI.");
+    process.exit(1);
+}
 
-// Database connection with fallback
-const connectDB = async () => {
-  try {
-    // First try MongoDB Atlas
-    const conn = await mongoose.connect(
-      process.env.MONGODB_URI || 'mongodb://localhost:27017/dairy-shop',
-      {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-        socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
-      }
-    );
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error('❌ MongoDB Atlas connection failed:', error.message);
-    
-    // Fallback to local MongoDB for development
-    if (process.env.NODE_ENV === 'development') {
+mongoose.connect(process.env.MONGODB_URI, { dbName: process.env.MONGODB_DB || 'test' })
+  .then(async () => {
+      const conn = mongoose.connection;
+      const dbName = conn?.name;
+      const host = conn?.host;
+      console.log(`Connected to MongoDB db=${dbName} host=${host}`);
+      
+      // Auto-generate salary slips on server start
       try {
-        console.log('🔄 Attempting to connect to local MongoDB...');
-        const localConn = await mongoose.connect('mongodb://localhost:27017/dairy-shop', {
-          useNewUrlParser: true,
-          useUnifiedTopology: true,
-        });
-        console.log(`✅ Local MongoDB Connected: ${localConn.connection.host}`);
-        console.log('💡 Note: Using local MongoDB. Install MongoDB locally or fix Atlas connection.');
-      } catch (localError) {
-        console.error('❌ Local MongoDB connection also failed:', localError.message);
-        console.log('💡 To fix this:');
-        console.log('   1. Install MongoDB locally: https://www.mongodb.com/try/download/community');
-        console.log('   2. Or fix your MongoDB Atlas connection string in .env file');
-        console.log('   3. Or use Docker: docker run -d -p 27017:27017 --name mongodb mongo:latest');
-        process.exit(1);
+        const { autoGenerateSalarySlipsForPayroll, getMockPayrollData } = await import('./Controllers/salarySlipController.js');
+        
+        // Always check for new payroll records and generate salary slips
+        const EmployeeSalarySlip = (await import('./Model/EmployeeSalarySlip.js')).default;
+        const existingSlips = await EmployeeSalarySlip.countDocuments();
+        
+        console.log(`📊 Found ${existingSlips} existing salary slips. Checking for new payroll records...`);
+        
+        const payrollData = getMockPayrollData();
+        console.log(`📋 Found ${payrollData.length} payroll records in mock data`);
+        
+        const result = await autoGenerateSalarySlipsForPayroll(payrollData);
+        
+        if (result.success) {
+          console.log(`✅ Auto-generation completed!`);
+          console.log(`📊 Created: ${result.results.created}, Skipped: ${result.results.skipped}, Errors: ${result.results.errors.length}`);
+        } else {
+          console.log('⚠️  Auto-generation failed:', result.message);
+        }
+      } catch (error) {
+        console.log('⚠️  Auto-generation failed:', error.message);
       }
-    } else {
-      process.exit(1);
-    }
-  }
-};
-
-// Connect to database
-connectDB();
-
-// Routes
-app.use('/api/products', productRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/chatbot', chatbotRoutes);
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'DairyLicious API is running!',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Welcome to DairyLicious API!',
-    version: '1.0.0',
-    endpoints: {
-      products: '/api/products',
-      cart: '/api/cart',
-      orders: '/api/orders',
-      users: '/api/users',
-      chatbot: '/api/chatbot',
-      health: '/api/health'
-    }
-  });
-});
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Endpoint not found'
-  });
-});
-
-// Error handling middleware
-app.use((error, req, res, next) => {
-  console.error('Error:', error);
-  
-  if (error.name === 'ValidationError') {
-    const errors = Object.values(error.errors).map(err => err.message);
-    return res.status(400).json({
-      success: false,
-      message: 'Validation Error',
-      errors
-    });
-  }
-  
-  if (error.name === 'CastError') {
-    return res.status(400).json({
-      success: false,
-      message: 'Invalid ID format'
-    });
-  }
-  
-  res.status(500).json({
-    success: false,
-    message: 'Internal server error'
-  });
-});
-
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌐 API available at http://localhost:${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-});
-
-module.exports = app;
+      
+      app.listen(process.env.PORT || 8000, () => {
+          console.log(`Server running on http://localhost:${process.env.PORT || 8000}`);
+      });
+  })
+  .catch((err) => console.log(err));

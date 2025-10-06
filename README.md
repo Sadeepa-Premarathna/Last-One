@@ -1,1 +1,1 @@
-# Last-One
+# Last-One - Dairy Products Manufacturing Management System

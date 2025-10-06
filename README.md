@@ -1,281 +1,243 @@
-# 🥛 Dairy Licious - Inventory Management System
+# FreshDairy - Modern Dairy Product Online Shop
 
-A modern, full-stack MERN (MongoDB, Express, React, Node.js) inventory management system for Dairy Licious, a Sri Lankan dairy products manufacturing company. Built with TypeScript, featuring beautiful animations, real-time expiry notifications, and comprehensive product management.
+A full-stack MERN (MongoDB, Express.js, React, Node.js) application for a modern dairy product online shop with TypeScript, featuring an eye-catching UI with animations, product cards, and shopping cart functionality.
 
-## ✨ Features
+## 🌟 Features
 
-### 🎨 Modern UI
-- **Eye-catching gradient backgrounds** with smooth animations
-- **Animated sidebar** with collapsible navigation
-- **Product cards** with hover effects and status indicators
-- **Framer Motion** animations throughout the application
-- **Responsive design** for all device sizes
+### Frontend Features
+- ✨ Modern, responsive UI with smooth animations using Framer Motion
+- 🛒 Interactive shopping cart functionality
+- 📱 Mobile-first responsive design
+- 🎨 Material-UI components with custom theming
+- 🔍 Product search and filtering
+- 📋 Product categories (Milk, Cheese, Yogurt, Butter, Cream, Ice Cream)
+- ⭐ Product ratings and reviews
+- 🏪 Featured products showcase
+- 📧 Contact and about pages
 
-### 📦 Product Management
-- **Add/Edit/Delete products** with full validation
-- **Product categories**: Milk, Yogurt, Cheese, Butter, Ice Cream, Cream, Other
-- **Real-time stock tracking** with status indicators
-- **Image support** for product photos
-- **Batch number tracking** for quality control
+### Backend Features
+- 🔐 JWT-based authentication and authorization
+- 🛡️ Security middleware (Helmet, CORS, Rate Limiting)
+- 📊 RESTful API with comprehensive error handling
+- 🗃️ MongoDB database with Mongoose ODM
+- 🛒 Cart management system
+- 👥 User management and profiles
+- 📦 Product management with categories
+- 🔍 Advanced search and filtering capabilities
 
-### ⚠️ Smart Notifications
-- **Expiry date tracking** with color-coded alerts
-- **7-day expiry warning** system
-- **Low stock alerts** when inventory falls below minimum levels
-- **Automatic status updates** via cron jobs
-- **Real-time notifications** using React Toastify
+## 🛠️ Technology Stack
 
-### 📊 Dashboard Analytics
-- **Total products** overview
-- **Active products** count
-- **Low stock items** tracking
-- **Expired products** monitoring
-- **Total inventory value** calculation (in Sri Lankan Rupees)
+### Frontend
+- **React 18** with TypeScript
+- **Material-UI (MUI)** for UI components
+- **Framer Motion** for animations
+- **React Router** for navigation
+- **React Query** for data fetching
+- **Axios** for HTTP requests
+- **React Hook Form** for form handling
+- **React Hot Toast** for notifications
 
-## 🏗️ Project Structure
+### Backend
+- **Node.js** with TypeScript
+- **Express.js** web framework
+- **MongoDB** with Mongoose ODM
+- **JWT** for authentication
+- **Bcrypt** for password hashing
+- **Helmet** for security headers
+- **CORS** for cross-origin requests
+- **Express Rate Limit** for API protection
+
+## 📁 Project Structure
 
 ```
-Inventory Dashboard/
-├── backend/                     # Backend (Node.js + Express + TypeScript)
+dairy-shop/
+├── backend/
 │   ├── src/
-│   │   ├── config/
-│   │   │   └── database.ts     # MongoDB connection
-│   │   ├── models/
-│   │   │   └── Product.ts      # Product schema with validation
-│   │   ├── controllers/
-│   │   │   └── productController.ts  # Business logic
-│   │   ├── routes/
-│   │   │   └── productRoutes.ts      # API routes
-│   │   ├── middleware/
-│   │   │   └── errorHandler.ts       # Error handling
-│   │   └── server.ts           # Entry point with cron jobs
+│   │   ├── controllers/      # Route controllers
+│   │   ├── middleware/       # Authentication & validation
+│   │   ├── models/          # MongoDB models
+│   │   ├── routes/          # API routes
+│   │   ├── utils/           # Utility functions
+│   │   └── server.ts        # Main server file
 │   ├── package.json
-│   ├── tsconfig.json
-│   ├── .env                    # Environment variables
-│   └── nodemon.json
-│
-└── frontend/                   # Frontend (React + TypeScript + Vite)
-    ├── src/
-    │   ├── components/
-    │   │   ├── Layout.tsx      # Main layout wrapper
-    │   │   ├── Layout.css
-    │   │   ├── Sidebar.tsx     # Animated sidebar navigation
-    │   │   ├── Sidebar.css
-    │   │   ├── ProductCard.tsx # Product display card
-    │   │   ├── ProductCard.css
-    │   │   ├── ProductForm.tsx # Add/Edit form with validation
-    │   │   └── ProductForm.css
-    │   ├── pages/
-    │   │   ├── Dashboard.tsx   # Dashboard with stats
-    │   │   ├── Dashboard.css
-    │   │   ├── Products.tsx    # Product listing page
-    │   │   └── Products.css
-    │   ├── services/
-    │   │   └── api.ts          # Axios API service
-    │   ├── types/
-    │   │   └── index.ts        # TypeScript interfaces
-    │   ├── utils/
-    │   │   └── helpers.ts      # Utility functions
-    │   ├── App.tsx             # Main app component
-    │   ├── main.tsx            # Entry point
-    │   └── index.css           # Global styles
-    ├── package.json
-    ├── tsconfig.json
-    ├── vite.config.ts
-    └── index.html
+│   └── tsconfig.json
+├── frontend/
+│   ├── src/
+│   │   ├── components/      # Reusable UI components
+│   │   ├── pages/           # Page components
+│   │   ├── services/        # API services
+│   │   ├── types/           # TypeScript type definitions
+│   │   ├── hooks/           # Custom React hooks
+│   │   ├── utils/           # Utility functions
+│   │   └── App.tsx          # Main App component
+│   ├── public/
+│   ├── package.json
+│   └── tsconfig.json
+└── README.md
 ```
 
 ## 🚀 Getting Started
 
 ### Prerequisites
+- Node.js (v16 or higher)
+- MongoDB (local or MongoDB Atlas)
+- npm or yarn package manager
 
-- **Node.js** (v18 or higher)
-- **MongoDB Atlas** account (already configured)
-- **npm** or **yarn** package manager
+### Installation
 
-### Backend Setup
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd Shop\ new
+   ```
 
-1. **Navigate to backend directory:**
-```powershell
-cd "c:\Inventory Dashboard\backend"
-```
+2. **Backend Setup**
+   ```bash
+   cd backend
+   npm install
+   
+   # Create environment file
+   cp .env.example .env
+   # Edit .env with your MongoDB URI and other configurations
+   
+   # Build and start the server
+   npm run build
+   npm start
+   ```
 
-2. **Install dependencies:**
-```powershell
-npm install
-```
+3. **Frontend Setup**
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
 
-3. **Environment variables are already configured in `.env`:**
+4. **Start MongoDB**
+   - Start your local MongoDB instance, or
+   - Use MongoDB Atlas cloud database
+
+### Environment Variables
+
+Create a `.env` file in the backend directory:
+
 ```env
 PORT=5000
-MONGODB_URI=mongodb+srv://admin:zUwJYfxBUS1dfImJ@cluster0.82iazhd.mongodb.net/DairyLicious?retryWrites=true&w=majority
-MONGODB_DB=dairy_shop
 NODE_ENV=development
+MONGODB_URI=mongodb://localhost:27017/dairy-shop
+FRONTEND_URL=http://localhost:3000
+JWT_SECRET=your-super-secret-jwt-key
+JWT_EXPIRE=7d
 ```
 
-4. **Start the development server:**
-```powershell
-npm run dev
-```
-
-Server will run on: `http://localhost:5000`
-
-### Frontend Setup
-
-1. **Open a new terminal and navigate to frontend directory:**
-```powershell
-cd "c:\Inventory Dashboard\frontend"
-```
-
-2. **Install dependencies:**
-```powershell
-npm install
-```
-
-3. **Start the development server:**
-```powershell
-npm run dev
-```
-
-Frontend will run on: `http://localhost:3000`
-
-## 📡 API Endpoints
+## 📊 API Endpoints
 
 ### Products
-- `GET /api/products` - Get all products
+- `GET /api/products` - Get all products with filtering
+- `GET /api/products/featured` - Get featured products
 - `GET /api/products/:id` - Get product by ID
-- `POST /api/products` - Create new product
-- `PUT /api/products/:id` - Update product
-- `DELETE /api/products/:id` - Delete product
+- `GET /api/products/category/:category` - Get products by category
+- `GET /api/products/search` - Search products
+- `GET /api/products/categories` - Get all categories
 
-### Statistics
-- `GET /api/products/stats` - Get dashboard statistics
-- `GET /api/products/expiring` - Get products expiring within 7 days
-- `GET /api/products/low-stock` - Get low stock products
+### Cart (Protected)
+- `GET /api/cart` - Get user's cart
+- `POST /api/cart/add` - Add item to cart
+- `PUT /api/cart/update` - Update cart item quantity
+- `DELETE /api/cart/item/:productId` - Remove item from cart
+- `DELETE /api/cart/clear` - Clear cart
 
-## 🎯 Key Features Explained
+### Users
+- `POST /api/users/register` - Register new user
+- `POST /api/users/login` - Login user
+- `GET /api/users/profile` - Get user profile (protected)
 
-### Product Validation
-- Name: Required, max 100 characters
-- Description: Required, max 500 characters
-- Price: Required, must be positive (in Rs)
-- Quantity: Required, cannot be negative
-- Expiry date: Must be after manufacture date
-- Batch number: Required and unique
+## 🎨 Design Features
 
-### Auto Status Updates
-Products automatically update their status based on:
-- **Active**: Normal stock levels, not expired
-- **Low Stock**: Quantity ≤ minimum stock level
-- **Out of Stock**: Quantity = 0
-- **Expired**: Current date > expiry date
+### UI/UX
+- Clean, modern design with dairy-themed color scheme
+- Smooth page transitions and hover effects
+- Loading states and error handling
+- Responsive grid layout for products
+- Interactive cart with real-time updates
 
-### Cron Jobs
-- Runs daily at midnight
-- Automatically marks expired products
-- Ensures database consistency
+### Animations
+- Page load animations using Framer Motion
+- Scroll-triggered animations with Intersection Observer
+- Hover effects on product cards
+- Smooth transitions between pages
 
-### Currency Format
-- All prices displayed in Sri Lankan Rupees (Rs)
-- Format: `Rs 1,234.56`
+## 🛒 Product Categories
 
-## 🎨 Technology Stack
+- **Milk** - Various types of fresh milk
+- **Cheese** - Artisan and regular cheese varieties
+- **Yogurt** - Greek and regular yogurt
+- **Butter** - Fresh and organic butter
+- **Cream** - Heavy cream and whipped cream
+- **Ice Cream** - Premium ice cream flavors
 
-### Backend
-- **Node.js** - Runtime environment
-- **Express.js** - Web framework
-- **TypeScript** - Type safety
-- **MongoDB** - Database (Atlas)
-- **Mongoose** - ODM
-- **node-cron** - Scheduled tasks
-- **express-validator** - Input validation
-- **dotenv** - Environment configuration
+## 🔐 Security Features
 
-### Frontend
-- **React 18** - UI library
-- **TypeScript** - Type safety
-- **Vite** - Build tool
-- **React Router** - Navigation
-- **Framer Motion** - Animations
-- **Axios** - HTTP client
-- **React Icons** - Icon library
-- **React Toastify** - Notifications
-- **date-fns** - Date formatting
+- JWT token-based authentication
+- Password hashing with bcrypt
+- Rate limiting to prevent abuse
+- CORS configuration
+- Input validation and sanitization
+- Security headers with Helmet
 
-## 🔒 Database Schema
+## 🚀 Deployment
 
-```typescript
-Product {
-  name: String (required, max 100)
-  category: Enum (Milk, Yogurt, Cheese, Butter, Ice Cream, Cream, Other)
-  description: String (required, max 500)
-  price: Number (required, min 0)
-  quantity: Number (required, min 0)
-  unit: Enum (Liters, Kilograms, Pieces, Bottles, Packets)
-  manufactureDate: Date (required)
-  expiryDate: Date (required, must be after manufactureDate)
-  batchNumber: String (required, unique)
-  supplier: String (required)
-  imageUrl: String (optional)
-  minStockLevel: Number (required, min 0, default 10)
-  status: Enum (active, low-stock, out-of-stock, expired)
-  createdAt: Date (auto)
-  updatedAt: Date (auto)
-}
-```
+### Backend Deployment
+1. Build the TypeScript code: `npm run build`
+2. Set production environment variables
+3. Deploy to platforms like Heroku, DigitalOcean, or AWS
 
-## 🎬 Usage
+### Frontend Deployment
+1. Build the React app: `npm run build`
+2. Deploy to platforms like Vercel, Netlify, or AWS S3
 
-1. **Access the application** at `http://localhost:3000`
-2. **View Dashboard** to see inventory statistics
-3. **Click "Products"** in the sidebar to manage inventory
-4. **Add new products** using the "+ Add New Product" button
-5. **Edit products** by clicking the "Edit" button on any product card
-6. **Delete products** by clicking the "Delete" button
-7. **Monitor expiry notifications** at the top of the products page
+## 🧪 Testing
 
-## 🌟 Design Highlights
+Run tests for both frontend and backend:
 
-- **Gradient Background**: Purple to violet gradient for modern aesthetic
-- **Glass Morphism**: Frosted glass effect on cards and modals
-- **Smooth Animations**: Framer Motion for fluid transitions
-- **Color-coded Status**: Visual indicators for product status
-- **Responsive Grid**: Adaptive layout for all screen sizes
-- **Sri Lankan Focus**: Currency in LKR, company branding
-
-## 🛠️ Build for Production
-
-### Backend
-```powershell
+```bash
+# Backend tests
 cd backend
-npm run build
-npm start
-```
+npm test
 
-### Frontend
-```powershell
+# Frontend tests
 cd frontend
-npm run build
+npm test
 ```
 
-Build output will be in `frontend/dist` directory.
+## 📝 TODO / Future Enhancements
 
-## 📝 Notes
-
-- Database is already configured with MongoDB Atlas
-- No mock data - all data comes from real database
-- TypeScript ensures type safety throughout
-- All validations work on both frontend and backend
-- Expiry notifications update in real-time
+- [ ] User authentication and registration
+- [ ] Order management system
+- [ ] Payment integration (Stripe/PayPal)
+- [ ] Admin dashboard for product management
+- [ ] Product reviews and ratings
+- [ ] Wishlist functionality
+- [ ] Email notifications
+- [ ] Inventory management
+- [ ] Multi-language support
+- [ ] PWA features
 
 ## 🤝 Contributing
 
-This is a proprietary system for Dairy Licious. For modifications or enhancements, contact the development team.
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/new-feature`
+3. Commit your changes: `git commit -am 'Add new feature'`
+4. Push to the branch: `git push origin feature/new-feature`
+5. Submit a pull request
 
 ## 📄 License
 
-Proprietary - Dairy Licious © 2024
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👨‍💻 Author
+
+Created with ❤️ for fresh dairy lovers
 
 ---
 
-**Developed with ❤️ for Dairy Licious, Sri Lanka**
+**Note**: This is a demo application. In a production environment, you would need to implement additional security measures, payment processing, and other production-ready features.

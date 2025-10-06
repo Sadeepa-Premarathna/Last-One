@@ -1,282 +1,245 @@
-# 🥛 Dairy Licious - Complete MERN Admin Dashboard
+# Daily Licious - Dairy Management System
 
-A comprehensive, full-stack MERN (MongoDB, Express, React, Node.js) admin dashboard for Dairy Licious, a Sri Lankan dairy products company. This integrated system includes Inventory Management, Delivery & Collection, Finance, HR, Orders, and Analytics modules.
+A comprehensive MERN stack application for managing dairy product deliveries and milk collection from farmers in Sri Lanka.
 
-## ✨ Features
+## 🚀 Features
 
-### 🎨 Modern UI
-- **Eye-catching gradient backgrounds** with smooth animations
-- **Animated sidebar** with collapsible navigation
-- **Product cards** with hover effects and status indicators
-- **Framer Motion** animations throughout the application
-- **Responsive design** for all device sizes
+### Delivery Management
+- Track product deliveries to customers
+- Assign deliveries to drivers
+- Monitor delivery status (Pending, In Transit, Delivered, Failed, Cancelled)
+- Multiple product types support (Fresh Milk, Curd, Yogurt, Cheese, Butter, Ice Cream)
+- Payment tracking (Cash, Card, Online Transfer, Credit)
+- Customer signature capture
 
-### 📦 Product Management
-- **Add/Edit/Delete products** with full validation
-- **Product categories**: Milk, Yogurt, Cheese, Butter, Ice Cream, Cream, Other
-- **Real-time stock tracking** with status indicators
-- **Image support** for product photos
-- **Batch number tracking** for quality control
+### Milk Collection Management
+- Record milk collections from farmers
+- Morning and Evening collection sessions
+- Quality assessment (Fat content, SNF, Temperature, Smell, Grade)
+- Automatic price calculation
+- Payment status tracking
+- Collection history by farmer
 
-### ⚠️ Smart Notifications
-- **Expiry date tracking** with color-coded alerts
-- **7-day expiry warning** system
-- **Low stock alerts** when inventory falls below minimum levels
-- **Automatic status updates** via cron jobs
-- **Real-time notifications** using React Toastify
+### Driver Management
+- Driver registration with complete details
+- NIC and License verification
+- Vehicle assignment
+- Route management
+- Active/Inactive status tracking
+- Contact information
 
-### 📊 Dashboard Analytics
-- **Total products** overview
-- **Active products** count
-- **Low stock items** tracking
-- **Expired products** monitoring
-- **Total inventory value** calculation (in Sri Lankan Rupees)
+### Farmer Management
+- Farmer registration
+- Farm location tracking
+- Number of cows tracking
+- Bank details for payments
+- Active/Inactive/Suspended status
 
-## 🏗️ Project Structure
+## 📁 Project Structure
 
 ```
-Inventory Dashboard/
-├── backend/                     # Backend (Node.js + Express + TypeScript)
-│   ├── src/
-│   │   ├── config/
-│   │   │   └── database.ts     # MongoDB connection
-│   │   ├── models/
-│   │   │   └── Product.ts      # Product schema with validation
-│   │   ├── controllers/
-│   │   │   └── productController.ts  # Business logic
-│   │   ├── routes/
-│   │   │   └── productRoutes.ts      # API routes
-│   │   ├── middleware/
-│   │   │   └── errorHandler.ts       # Error handling
-│   │   └── server.ts           # Entry point with cron jobs
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── .env                    # Environment variables
-│   └── nodemon.json
-│
-└── frontend/                   # Frontend (React + TypeScript + Vite)
-    ├── src/
-    │   ├── components/
-    │   │   ├── Layout.tsx      # Main layout wrapper
-    │   │   ├── Layout.css
-    │   │   ├── Sidebar.tsx     # Animated sidebar navigation
-    │   │   ├── Sidebar.css
-    │   │   ├── ProductCard.tsx # Product display card
-    │   │   ├── ProductCard.css
-    │   │   ├── ProductForm.tsx # Add/Edit form with validation
-    │   │   └── ProductForm.css
-    │   ├── pages/
-    │   │   ├── Dashboard.tsx   # Dashboard with stats
-    │   │   ├── Dashboard.css
-    │   │   ├── Products.tsx    # Product listing page
-    │   │   └── Products.css
-    │   ├── services/
-    │   │   └── api.ts          # Axios API service
-    │   ├── types/
-    │   │   └── index.ts        # TypeScript interfaces
-    │   ├── utils/
-    │   │   └── helpers.ts      # Utility functions
-    │   ├── App.tsx             # Main app component
-    │   ├── main.tsx            # Entry point
-    │   └── index.css           # Global styles
-    ├── package.json
-    ├── tsconfig.json
-    ├── vite.config.ts
-    └── index.html
+Daily Licious/
+├── backend/
+│   ├── config/
+│   │   └── db.js
+│   ├── controllers/
+│   │   ├── driverController.js
+│   │   ├── farmerController.js
+│   │   ├── deliveryController.js
+│   │   └── milkCollectionController.js
+│   ├── models/
+│   │   ├── Driver.js
+│   │   ├── Farmer.js
+│   │   ├── Delivery.js
+│   │   └── MilkCollection.js
+│   ├── routes/
+│   │   ├── driverRoutes.js
+│   │   ├── farmerRoutes.js
+│   │   ├── deliveryRoutes.js
+│   │   └── milkCollectionRoutes.js
+│   └── server.js
+├── frontend/ (React app - to be created)
+├── .env
+├── .gitignore
+├── package.json
+└── README.md
 ```
 
-## 🚀 Getting Started
+## 🛠️ Installation
 
 ### Prerequisites
-
-- **Node.js** (v18 or higher)
-- **MongoDB Atlas** account (already configured)
-- **npm** or **yarn** package manager
+- Node.js (v14 or higher)
+- MongoDB Atlas account
+- npm or yarn
 
 ### Backend Setup
 
-1. **Navigate to backend directory:**
-```powershell
-cd "c:\Inventory Dashboard\backend"
-```
-
-2. **Install dependencies:**
-```powershell
+1. Install dependencies:
+```bash
 npm install
 ```
 
-3. **Environment variables are already configured in `.env`:**
-```env
-PORT=5000
+2. Environment variables are already configured in `.env`:
+```
 MONGODB_URI=mongodb+srv://admin:zUwJYfxBUS1dfImJ@cluster0.82iazhd.mongodb.net/DairyLicious?retryWrites=true&w=majority
 MONGODB_DB=dairy_shop
+PORT=5000
+JWT_SECRET=daily_licious_secret_key_2024
 NODE_ENV=development
 ```
 
-4. **Start the development server:**
-```powershell
-npm run dev
-```
-
-Server will run on: `http://localhost:5000`
-
-### Frontend Setup
-
-1. **Open a new terminal and navigate to frontend directory:**
-```powershell
-cd "c:\Inventory Dashboard\frontend"
-```
-
-2. **Install dependencies:**
-```powershell
-npm install
-```
-
-3. **Start the development server:**
-```powershell
-npm run dev
-```
-
-Frontend will run on: `http://localhost:3000`
-
-## 📡 API Endpoints
-
-### Products
-- `GET /api/products` - Get all products
-- `GET /api/products/:id` - Get product by ID
-- `POST /api/products` - Create new product
-- `PUT /api/products/:id` - Update product
-- `DELETE /api/products/:id` - Delete product
-
-### Statistics
-- `GET /api/products/stats` - Get dashboard statistics
-- `GET /api/products/expiring` - Get products expiring within 7 days
-- `GET /api/products/low-stock` - Get low stock products
-
-## 🎯 Key Features Explained
-
-### Product Validation
-- Name: Required, max 100 characters
-- Description: Required, max 500 characters
-- Price: Required, must be positive (in Rs)
-- Quantity: Required, cannot be negative
-- Expiry date: Must be after manufacture date
-- Batch number: Required and unique
-
-### Auto Status Updates
-Products automatically update their status based on:
-- **Active**: Normal stock levels, not expired
-- **Low Stock**: Quantity ≤ minimum stock level
-- **Out of Stock**: Quantity = 0
-- **Expired**: Current date > expiry date
-
-### Cron Jobs
-- Runs daily at midnight
-- Automatically marks expired products
-- Ensures database consistency
-
-### Currency Format
-- All prices displayed in Sri Lankan Rupees (Rs)
-- Format: `Rs 1,234.56`
-
-## 🎨 Technology Stack
-
-### Backend
-- **Node.js** - Runtime environment
-- **Express.js** - Web framework
-- **TypeScript** - Type safety
-- **MongoDB** - Database (Atlas)
-- **Mongoose** - ODM
-- **node-cron** - Scheduled tasks
-- **express-validator** - Input validation
-- **dotenv** - Environment configuration
-
-### Frontend
-- **React 18** - UI library
-- **TypeScript** - Type safety
-- **Vite** - Build tool
-- **React Router** - Navigation
-- **Framer Motion** - Animations
-- **Axios** - HTTP client
-- **React Icons** - Icon library
-- **React Toastify** - Notifications
-- **date-fns** - Date formatting
-
-## 🔒 Database Schema
-
-```typescript
-Product {
-  name: String (required, max 100)
-  category: Enum (Milk, Yogurt, Cheese, Butter, Ice Cream, Cream, Other)
-  description: String (required, max 500)
-  price: Number (required, min 0)
-  quantity: Number (required, min 0)
-  unit: Enum (Liters, Kilograms, Pieces, Bottles, Packets)
-  manufactureDate: Date (required)
-  expiryDate: Date (required, must be after manufactureDate)
-  batchNumber: String (required, unique)
-  supplier: String (required)
-  imageUrl: String (optional)
-  minStockLevel: Number (required, min 0, default 10)
-  status: Enum (active, low-stock, out-of-stock, expired)
-  createdAt: Date (auto)
-  updatedAt: Date (auto)
-}
-```
-
-## 🎬 Usage
-
-1. **Access the application** at `http://localhost:3000`
-2. **View Dashboard** to see inventory statistics
-3. **Click "Products"** in the sidebar to manage inventory
-4. **Add new products** using the "+ Add New Product" button
-5. **Edit products** by clicking the "Edit" button on any product card
-6. **Delete products** by clicking the "Delete" button
-7. **Monitor expiry notifications** at the top of the products page
-
-## 🌟 Design Highlights
-
-- **Gradient Background**: Purple to violet gradient for modern aesthetic
-- **Glass Morphism**: Frosted glass effect on cards and modals
-- **Smooth Animations**: Framer Motion for fluid transitions
-- **Color-coded Status**: Visual indicators for product status
-- **Responsive Grid**: Adaptive layout for all screen sizes
-- **Sri Lankan Focus**: Currency in LKR, company branding
-
-## 🛠️ Build for Production
-
-### Backend
-```powershell
-cd backend
-npm run build
+3. Start the server:
+```bash
 npm start
 ```
 
-### Frontend
-```powershell
-cd frontend
-npm run build
+For development with auto-restart:
+```bash
+npm run server
 ```
 
-Build output will be in `frontend/dist` directory.
+## 📡 API Endpoints
 
-## 📝 Notes
+### Drivers
+- `GET /api/drivers` - Get all drivers
+- `GET /api/drivers/:id` - Get single driver
+- `POST /api/drivers` - Create new driver
+- `PUT /api/drivers/:id` - Update driver
+- `DELETE /api/drivers/:id` - Delete driver
+- `GET /api/drivers/status/active` - Get active drivers
 
-- Database is already configured with MongoDB Atlas
-- No mock data - all data comes from real database
-- TypeScript ensures type safety throughout
-- All validations work on both frontend and backend
-- Expiry notifications update in real-time
+### Farmers
+- `GET /api/farmers` - Get all farmers
+- `GET /api/farmers/:id` - Get single farmer
+- `POST /api/farmers` - Create new farmer
+- `PUT /api/farmers/:id` - Update farmer
+- `DELETE /api/farmers/:id` - Delete farmer
+- `GET /api/farmers/status/active` - Get active farmers
 
-## 🤝 Contributing
+### Deliveries
+- `GET /api/deliveries` - Get all deliveries
+- `GET /api/deliveries/:id` - Get single delivery
+- `POST /api/deliveries` - Create new delivery
+- `PUT /api/deliveries/:id` - Update delivery
+- `DELETE /api/deliveries/:id` - Delete delivery
+- `GET /api/deliveries/status/:status` - Get deliveries by status
+- `GET /api/deliveries/driver/:driverId` - Get deliveries by driver
+- `GET /api/deliveries/date-range?startDate=&endDate=` - Get deliveries by date range
 
-This is a proprietary system for Dairy Licious. For modifications or enhancements, contact the development team.
+### Milk Collections
+- `GET /api/milk-collections` - Get all collections
+- `GET /api/milk-collections/:id` - Get single collection
+- `POST /api/milk-collections` - Create new collection
+- `PUT /api/milk-collections/:id` - Update collection
+- `DELETE /api/milk-collections/:id` - Delete collection
+- `GET /api/milk-collections/farmer/:farmerId` - Get collections by farmer
+- `GET /api/milk-collections/date-range?startDate=&endDate=` - Get collections by date range
 
-## 📄 License
+## 📊 Data Models
 
-Proprietary - Dairy Licious © 2024
+### Driver Schema
+```javascript
+{
+  driverId: String (unique),
+  firstName: String,
+  lastName: String,
+  nic: String (unique),
+  licenseNumber: String (unique),
+  contactNumber: String,
+  email: String,
+  address: { street, city, district, postalCode },
+  vehicleNumber: String,
+  vehicleType: Enum,
+  status: Enum,
+  assignedRoute: String
+}
+```
 
----
+### Farmer Schema
+```javascript
+{
+  farmerId: String (unique),
+  firstName: String,
+  lastName: String,
+  nic: String (unique),
+  contactNumber: String,
+  address: { street, city, district, postalCode },
+  farmLocation: { latitude, longitude, description },
+  numberOfCows: Number,
+  status: Enum,
+  bankDetails: { bankName, accountNumber, accountHolderName, branch }
+}
+```
 
-**Developed with ❤️ for Dairy Licious, Sri Lanka**
->>>>>>> origin/Inventory
+### Delivery Schema
+```javascript
+{
+  deliveryId: String (unique),
+  driver: ObjectId (ref: Driver),
+  deliveryDate: Date,
+  customer: { name, contactNumber, address },
+  products: [{ productName, productType, quantity, unit, pricePerUnit, totalPrice }],
+  totalAmount: Number,
+  deliveryStatus: Enum,
+  paymentStatus: Enum,
+  paymentMethod: Enum,
+  route: String,
+  notes: String
+}
+```
+
+### Milk Collection Schema
+```javascript
+{
+  collectionId: String (unique),
+  farmer: ObjectId (ref: Farmer),
+  driver: ObjectId (ref: Driver),
+  collectionDate: Date,
+  collectionTime: Enum (Morning/Evening),
+  quantity: Number,
+  quality: { fatContent, snf, temperature, smell, grade },
+  pricePerLiter: Number,
+  totalAmount: Number (auto-calculated),
+  paymentStatus: Enum,
+  status: Enum
+}
+```
+
+## 🔒 Security Notes
+- Change the JWT_SECRET in production
+- Use environment variables for sensitive data
+- Implement authentication and authorization for production
+- Add input validation middleware
+- Use HTTPS in production
+
+## 🚦 Next Steps
+
+1. Create React frontend
+2. Implement authentication (JWT)
+3. Add role-based access control
+4. Create dashboard with analytics
+5. Add real-time notifications
+6. Implement reporting features
+7. Add mobile app support
+
+## 👨‍💻 Development
+
+```bash
+# Install all dependencies (backend + frontend)
+npm run install-all
+
+# Run backend only
+npm run server
+
+# Run frontend only
+npm run client
+
+# Run both concurrently
+npm run dev
+```
+
+## 📝 License
+ISC
+
+## 🏢 Company
+Daily Licious - Sri Lanka's Premier Dairy Management Solution

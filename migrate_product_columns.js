@@ -1,20 +1,3 @@
-// MongoDB Migration Script
-// Run this in MongoDB Compass or mongosh after code deployment
-
-// IMPORTANT: Backup your database first!
-// mongodump --uri="your_mongodb_uri" --out=backup_before_migration
-
-// ===================================
-// MIGRATION: Rename Product Columns
-// ===================================
-// Changes:
-// - quantity → stock
-// - expiryDate → expiryDays (convert Date to Number of days)
-// - imageUrl → image
-
-use dairy_shop;
-
-// Step 1: Add new fields with converted data
 db.products.updateMany(
   {},
   [
@@ -23,7 +6,7 @@ db.products.updateMany(
         // Rename quantity to stock
         stock: { $ifNull: ["$quantity", 0] },
         
-        // Calculate expiryDays from expiryDate and manufactureDate
+
         expiryDays: {
           $cond: {
             if: { $and: ["$expiryDate", "$manufactureDate"] },

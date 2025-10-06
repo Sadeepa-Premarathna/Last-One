@@ -1,30 +1,160 @@
-const Order = require('../models/Order');
+const Order = require('../Model/Order');
+const Cart = require('../Model/Cart');
+const Product = require('../Model/Product');
+const Counter = require('../Model/CounterOrd'); // Import the new Counter model
+const mongoose = require('mongoose');
 
-// Get all orders
-exports.getAllOrders = async (req, res) => {
+// Helper function to get the next sequence number
+const getNextSequence = async (name) => {
+  const ret = await Counter.findOneAndUpdate(
+    { _id: name },
+    { $inc: { seq: 1 } },
+    { new: true, upsert: true }
+  );
+  return ret.seq;
+};
+
+// Create new order
+const createOrder = async (req, res) => {
   try {
-    const orders = await Order.find()
-      .populate('assignedDriver', 'firstName lastName driverId contactNumber vehicleNumber')
-      .sort({ orderDate: -1 });
-    res.status(200).json({
+    const cartUserId = req.user?.id || req.session?.guestId || `guest_${Date.now()}`;
+    const { shippingAddress, paymentMethod, items } = req.body;
+
+    if (!shippingAddress || !paymentMethod || !items || items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields'
+      });
+    }
+
+    // Calculate totals
+    let totalAmount = 0;
+    const orderItems = [];
+
+    for (let item of items) {
+      const product = await Product.findById(item.productId);
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: `Product not found: ${item.productId}`
+        });
+      }
+
+      if (product.stock < item.quantity) {
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock for ${product.name}`
+        });
+      }
+
+      const itemTotal = product.price * item.quantity;
+      totalAmount += itemTotal;
+
+      orderItems.push({
+        productId: product._id,
+        name: product.name,
+        quantity: item.quantity,
+        price: product.price,
+        total: itemTotal
+      });
+
+      // Update product stock
+      product.stock -= item.quantity;
+      await product.save();
+    }
+
+    // Generate sequential orderNumber
+    const sequence = await getNextSequence('orders');
+    const orderNumber = `ORD${sequence.toString().padStart(6, '0')}`;
+
+    // Handle userId for authenticated users vs guests
+    let userId;
+    let guestId = null;
+    if (mongoose.Types.ObjectId.isValid(cartUserId)) {
+      userId = cartUserId;
+    } else {
+      userId = new mongoose.Types.ObjectId();
+      guestId = cartUserId;
+    }
+
+    const order = new Order({
+      userId,
+      guestId,
+      orderId: orderNumber,
+      orderNumber,
+      items: orderItems,
+      shippingAddress,
+      paymentMethod,
+      totalAmount,
+      shippingCost: 0, // Free shipping for now
+      taxAmount: totalAmount * 0.1, // 10% tax
+      discountAmount: 0
+    });
+
+    await order.save();
+
+    // Clear user's cart after successful order
+    await Cart.findOneAndUpdate(
+      { user: cartUserId },
+      { items: [], totalPrice: 0 }
+    );
+
+    res.status(201).json({
+      success: true,
+      data: order,
+      message: 'Order created successfully'
+    });
+  } catch (error) {
+    console.error('Create order error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while creating order'
+    });
+  }
+};
+
+// Get user orders
+const getUserOrders = async (req, res) => {
+  try {
+    const userIdentifier = req.user?.id || req.session?.guestId;
+    
+    if (!userIdentifier) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
+      });
+    }
+
+    let query = {};
+    if (mongoose.Types.ObjectId.isValid(userIdentifier)) {
+      query = { userId: new mongoose.Types.ObjectId(userIdentifier) };
+    } else {
+      query = { guestId: userIdentifier };
+    }
+
+    const orders = await Order.find(query)
+      .populate('items.productId')
+      .sort({ createdAt: -1 });
+
+    res.json({
       success: true,
       data: orders
     });
   } catch (error) {
+    console.error('Get user orders error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching orders',
-      error: error.message
+      message: 'Server error while fetching orders'
     });
   }
 };
 
 // Get single order
-exports.getOrderById = async (req, res) => {
+const getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
-      .populate('assignedDriver', 'firstName lastName driverId contactNumber vehicleNumber');
-    
+      .populate('items.productId');
+
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -32,32 +162,29 @@ exports.getOrderById = async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    res.json({
       success: true,
       data: order
     });
   } catch (error) {
+    console.error('Get order error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching order',
-      error: error.message
+      message: 'Server error while fetching order'
     });
   }
 };
 
-// Assign driver to order
-exports.assignDriver = async (req, res) => {
+// Update order status (admin only)
+const updateOrderStatus = async (req, res) => {
   try {
-    const { driverId } = req.body;
+    const { orderStatus } = req.body;
     
     const order = await Order.findByIdAndUpdate(
       req.params.id,
-      { 
-        assignedDriver: driverId,
-        status: driverId ? 'Assigned' : 'Pending'
-      },
-      { new: true, runValidators: true }
-    ).populate('assignedDriver', 'firstName lastName driverId contactNumber vehicleNumber');
+      { orderStatus },
+      { new: true }
+    );
 
     if (!order) {
       return res.status(404).json({
@@ -66,112 +193,59 @@ exports.assignDriver = async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    res.json({
       success: true,
-      message: 'Driver assigned successfully',
-      data: order
+      data: order,
+      message: 'Order status updated successfully'
     });
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: 'Error assigning driver',
-      error: error.message
-    });
-  }
-};
-
-// Update order status
-exports.updateOrderStatus = async (req, res) => {
-  try {
-    const { status } = req.body;
-    
-    const updateData = { status };
-    
-    // If status is Delivered, set deliveredDate
-    if (status === 'Delivered') {
-      updateData.deliveredDate = new Date();
-    }
-
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true, runValidators: true }
-    ).populate('assignedDriver', 'firstName lastName driverId contactNumber vehicleNumber');
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found'
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Order status updated successfully',
-      data: order
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: 'Error updating order status',
-      error: error.message
-    });
-  }
-};
-
-// Update payment status
-exports.updatePaymentStatus = async (req, res) => {
-  try {
-    const { paymentStatus, paymentMethod } = req.body;
-    
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { paymentStatus, paymentMethod },
-      { new: true, runValidators: true }
-    ).populate('assignedDriver', 'firstName lastName driverId contactNumber vehicleNumber');
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found'
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Payment status updated successfully',
-      data: order
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: 'Error updating payment status',
-      error: error.message
-    });
-  }
-};
-
-// Delete order
-exports.deleteOrder = async (req, res) => {
-  try {
-    const order = await Order.findByIdAndDelete(req.params.id);
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found'
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Order deleted successfully'
-    });
-  } catch (error) {
+    console.error('Update order status error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error deleting order',
-      error: error.message
+      message: 'Server error while updating order status'
     });
   }
+};
+
+// Get all orders (admin only)
+const getAllOrders = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const orders = await Order.find()
+      .populate('items.productId')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Order.countDocuments();
+
+    res.json({
+      success: true,
+      data: orders,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalItems: total,
+        hasNext: page < Math.ceil(total / limit),
+        hasPrev: page > 1
+      }
+    });
+  } catch (error) {
+    console.error('Get all orders error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching orders'
+    });
+  }
+};
+
+module.exports = {
+  createOrder,
+  getUserOrders,
+  getOrderById,
+  updateOrderStatus,
+  getAllOrders
 };

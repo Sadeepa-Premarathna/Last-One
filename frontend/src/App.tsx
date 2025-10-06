@@ -1,212 +1,198 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from 'react-query';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { Toaster } from 'react-hot-toast';
+import { useState, ReactElement } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import './App.css';
+import Home from './components/Home';
+import DriverList from './components/Driver/DriverList';
+import DriverForm from './components/Driver/DriverForm';
+import FarmerList from './components/Farmer/FarmerList';
+import FarmerForm from './components/Farmer/FarmerForm';
+import DeliveryList from './components/Delivery/DeliveryList';
+import DeliveryForm from './components/Delivery/DeliveryForm';
+import MilkCollectionList from './components/MilkCollection/MilkCollectionList';
+import MilkCollectionForm from './components/MilkCollection/MilkCollectionForm';
+import OrderList from './components/Order/OrderList';
+import PaymentList from './components/Payment/PaymentList';
+import { 
+  FaTruck, 
+  FaUsers, 
+  FaBoxOpen, 
+  FaWineBottle, 
+  FaHome, 
+  FaBars, 
+  FaTimes,
+  FaChartLine,
+  FaCog,
+  FaShoppingCart,
+  FaMoneyBillWave
+} from 'react-icons/fa';
 
-// Context
-import { CartProvider } from './context/CartContext';
+function AppContent(): ReactElement {
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+  const location = useLocation();
 
-// Components
-import Navbar from './components/Navbar/Navbar';
-import Footer from './components/Footer/Footer';
-import FloatingCart from './components/FloatingCart/FloatingCart';
-import Chatbot from './components/Chatbot/Chatbot';
+  const toggleSidebar = (): void => {
+    setSidebarOpen(!sidebarOpen);
+  };
 
-// Pages
-import Home from './pages/Home/Home';
-import Products from './pages/Products/Products';
-import ProductDetails from './pages/ProductDetails/ProductDetails';
-import Cart from './pages/Cart/Cart';
-import Checkout from './pages/Checkout/Checkout';
-import OrderTracking from './pages/OrderTracking/OrderTracking';
-import Orders from './pages/Orders/Orders';
-import Contact from './pages/Contact/Contact';
+  const isActive = (path: string): boolean => {
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
-});
-
-// Create theme with Poppins font
-const theme = createTheme({
-  typography: {
-    fontFamily: [
-      'Poppins',
-      '-apple-system',
-      'BlinkMacSystemFont',
-      '"Segoe UI"',
-      'Roboto',
-      '"Helvetica Neue"',
-      'Arial',
-      'sans-serif',
-    ].join(','),
-    h1: {
-      fontFamily: 'Poppins, sans-serif',
-      fontWeight: 700,
-    },
-    h2: {
-      fontFamily: 'Poppins, sans-serif',
-      fontWeight: 600,
-    },
-    h3: {
-      fontFamily: 'Poppins, sans-serif',
-      fontWeight: 600,
-    },
-    h4: {
-      fontFamily: 'Poppins, sans-serif',
-      fontWeight: 600,
-    },
-    h5: {
-      fontFamily: 'Poppins, sans-serif',
-      fontWeight: 600,
-    },
-    h6: {
-      fontFamily: 'Poppins, sans-serif',
-      fontWeight: 500,
-    },
-    body1: {
-      fontFamily: 'Poppins, sans-serif',
-      fontWeight: 400,
-    },
-    body2: {
-      fontFamily: 'Poppins, sans-serif',
-      fontWeight: 400,
-    },
-    button: {
-      fontFamily: 'Poppins, sans-serif',
-      fontWeight: 500,
-      textTransform: 'none',
-    },
-  },
-  palette: {
-    primary: {
-      main: '#2D5930', // Deep forest green from logo
-      light: '#4A7C59',
-      dark: '#1B3E1F',
-    },
-    secondary: {
-      main: '#7CB342', // Fresh green from logo
-      light: '#A5D6A7',
-      dark: '#558B2F',
-    },
-    success: {
-      main: '#66BB6A', // Bright green accent
-      light: '#81C784',
-      dark: '#388E3C',
-    },
-    info: {
-      main: '#26A69A', // Teal accent
-      light: '#4DB6AC',
-      dark: '#00695C',
-    },
-    background: {
-      default: '#F1F8E9', // Very light green background
-      paper: '#FFFFFF',
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          fontFamily: 'Poppins, sans-serif',
-          fontWeight: 500,
-          textTransform: 'none',
-          borderRadius: 8,
-          padding: '10px 20px',
-          transition: 'all 0.3s ease',
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          fontFamily: 'Poppins, sans-serif',
-          borderRadius: 12,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          transition: 'all 0.3s ease-in-out',
-          '&:hover': {
-            transform: 'translateY(-4px)',
-            boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
-          },
-        },
-      },
-    },
-    MuiTypography: {
-      styleOverrides: {
-        root: {
-          fontFamily: 'Poppins, sans-serif',
-        },
-      },
-    },
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          '& .MuiInputBase-input': {
-            fontFamily: 'Poppins, sans-serif',
-          },
-          '& .MuiInputLabel-root': {
-            fontFamily: 'Poppins, sans-serif',
-          },
-        },
-      },
-    },
-    MuiChip: {
-      styleOverrides: {
-        root: {
-          fontFamily: 'Poppins, sans-serif',
-        },
-      },
-    },
-  },
-});
-
-function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <CartProvider>
-          <Router>
-            <div className="App">
-              <Navbar />
-              <main style={{ minHeight: 'calc(100vh - 160px)', paddingTop: '120px' }}>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/products" element={<Products />} />
-                  <Route path="/products/:id" element={<ProductDetails />} />
-                  <Route path="/cart" element={<Cart />} />
-                  <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/orders" element={<Orders />} />
-                  <Route path="/orders/track/:trackingNumber" element={<OrderTracking />} />
-                  <Route path="/contact" element={<Contact />} />
-                </Routes>
-              </main>
-              <FloatingCart />
-              <Chatbot />
-              <Footer />
-              <Toaster 
-                position="top-right"
-                toastOptions={{
-                  duration: 4000,
-                  style: {
-                    background: '#363636',
-                    color: '#fff',
-                  },
-                }}
-              />
+    <div className="app-container">
+      {/* Top Header */}
+      <header className="top-header">
+        <div className="header-left">
+          <button className="menu-toggle" onClick={toggleSidebar}>
+            {sidebarOpen ? <FaTimes /> : <FaBars />}
+          </button>
+          <div className="brand">
+            <span className="brand-icon">🥛</span>
+            <div className="brand-text">
+              <h1>Daily Licious</h1>
+              <p>Dairy Management System</p>
             </div>
-          </Router>
-        </CartProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+          </div>
+        </div>
+        <div className="header-right">
+          <div className="user-info">
+            <span className="user-name">Admin User</span>
+            <div className="user-avatar">A</div>
+          </div>
+        </div>
+      </header>
+
+      {/* Sidebar Navigation */}
+      <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+        <nav className="sidebar-nav">
+          <Link 
+            to="/" 
+            className={`nav-item ${isActive('/') && location.pathname === '/' ? 'active' : ''}`}
+          >
+            <FaHome className="nav-icon" />
+            <span className="nav-text">Dashboard</span>
+          </Link>
+
+          <div className="nav-section">
+            <span className="nav-section-title">Management</span>
+          </div>
+
+          <Link 
+            to="/drivers" 
+            className={`nav-item ${isActive('/drivers') ? 'active' : ''}`}
+          >
+            <FaTruck className="nav-icon" />
+            <span className="nav-text">Drivers</span>
+          </Link>
+
+          <Link 
+            to="/farmers" 
+            className={`nav-item ${isActive('/farmers') ? 'active' : ''}`}
+          >
+            <FaUsers className="nav-icon" />
+            <span className="nav-text">Farmers</span>
+          </Link>
+
+          <Link 
+            to="/deliveries" 
+            className={`nav-item ${isActive('/deliveries') ? 'active' : ''}`}
+          >
+            <FaBoxOpen className="nav-icon" />
+            <span className="nav-text">Deliveries</span>
+          </Link>
+
+          <Link 
+            to="/milk-collections" 
+            className={`nav-item ${isActive('/milk-collections') ? 'active' : ''}`}
+          >
+            <FaWineBottle className="nav-icon" />
+            <span className="nav-text">Milk Collections</span>
+          </Link>
+
+          <Link 
+            to="/orders" 
+            className={`nav-item ${isActive('/orders') ? 'active' : ''}`}
+          >
+            <FaShoppingCart className="nav-icon" />
+            <span className="nav-text">Orders</span>
+          </Link>
+
+          <Link 
+            to="/payments" 
+            className={`nav-item ${isActive('/payments') ? 'active' : ''}`}
+          >
+            <FaMoneyBillWave className="nav-icon" />
+            <span className="nav-text">Payments</span>
+          </Link>
+
+          <div className="nav-section">
+            <span className="nav-section-title">Analytics</span>
+          </div>
+
+          <Link to="/reports" className="nav-item">
+            <FaChartLine className="nav-icon" />
+            <span className="nav-text">Reports</span>
+          </Link>
+
+          <div className="nav-section">
+            <span className="nav-section-title">System</span>
+          </div>
+
+          <Link to="/settings" className="nav-item">
+            <FaCog className="nav-icon" />
+            <span className="nav-text">Settings</span>
+          </Link>
+        </nav>
+
+        <div className="sidebar-footer">
+          <p>&copy; 2024 Daily Licious</p>
+          <p className="version">v1.0.0</p>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+        <div className="content-wrapper">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            
+            {/* Driver Routes */}
+            <Route path="/drivers" element={<DriverList />} />
+            <Route path="/drivers/add" element={<DriverForm />} />
+            <Route path="/drivers/edit/:id" element={<DriverForm />} />
+            
+            {/* Farmer Routes */}
+            <Route path="/farmers" element={<FarmerList />} />
+            <Route path="/farmers/add" element={<FarmerForm />} />
+            <Route path="/farmers/edit/:id" element={<FarmerForm />} />
+            
+            {/* Delivery Routes */}
+            <Route path="/deliveries" element={<DeliveryList />} />
+            <Route path="/deliveries/add" element={<DeliveryForm />} />
+            <Route path="/deliveries/edit/:id" element={<DeliveryForm />} />
+            
+            {/* Milk Collection Routes */}
+            <Route path="/milk-collections" element={<MilkCollectionList />} />
+            <Route path="/milk-collections/add" element={<MilkCollectionForm />} />
+            <Route path="/milk-collections/edit/:id" element={<MilkCollectionForm />} />
+            
+            {/* Order Routes */}
+            <Route path="/orders" element={<OrderList />} />
+            
+            {/* Payment Routes */}
+            <Route path="/payments" element={<PaymentList />} />
+          </Routes>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function App(): ReactElement {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
   );
 }
 

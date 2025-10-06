@@ -30,8 +30,17 @@ export const generatePayrollForEmployee = async (req, res) => {
     }
 
     // Check if payroll already exists for this employee and month
+    // First get the employee to find their employee_id
+    const employee = await Employee.findById(employeeId);
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: 'Employee not found'
+      });
+    }
+    
     const existingPayroll = await Payroll.findOne({ 
-      employeeId: employeeId, 
+      employeeIdDisplay: employee.employee_id, 
       month: month 
     });
 
@@ -44,14 +53,7 @@ export const generatePayrollForEmployee = async (req, res) => {
       });
     }
 
-    // Fetch employee details
-    const employee = await Employee.findById(employeeId);
-    if (!employee) {
-      return res.status(404).json({
-        success: false,
-        message: 'Employee not found'
-      });
-    }
+    // Employee details already fetched above
 
     // Fetch attendance record for the employee and month
     const attendance = await Attendance.findOne({
@@ -73,7 +75,7 @@ export const generatePayrollForEmployee = async (req, res) => {
 
     // Create new payroll record
     const newPayroll = new Payroll({
-      employeeId: employee._id,
+      employeeIdDisplay: employee.employee_id,
       employeeName: employee.name,
       month: month,
       basicSalary: basicSalary,
@@ -150,7 +152,7 @@ export const generatePayrollBatch = async (req, res) => {
       try {
         // Check if payroll already exists
         const existingPayroll = await Payroll.findOne({ 
-          employeeId: employee._id, 
+          employeeIdDisplay: employee.employee_id, 
           month: month 
         });
 
@@ -185,7 +187,7 @@ export const generatePayrollBatch = async (req, res) => {
 
         // Create payroll record
         const newPayroll = new Payroll({
-          employeeId: employee._id,
+          employeeIdDisplay: employee.employee_id,
           employeeName: employee.name,
           month: month,
           basicSalary: basicSalary,
@@ -235,30 +237,34 @@ export const getPayrolls = async (req, res) => {
     // Build filter object
     const filter = {};
     if (month) filter.month = month;
-    if (employeeId) filter.employeeId = employeeId;
+    if (employeeId) filter.employeeIdDisplay = employeeId; // Now filtering by employeeIdDisplay instead
 
     // Calculate pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
     // Get payroll records with pagination
     const payrolls = await Payroll.find(filter)
-      .populate('employeeId', 'name employeeId department')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
+
+    // Process payrolls - no longer need to populate employeeId since we have employeeIdDisplay
+    const processedPayrolls = payrolls.map(payroll => {
+      return payroll.toObject();
+    });
 
     // Get total count for pagination
     const total = await Payroll.countDocuments(filter);
 
     res.status(200).json({
       success: true,
-      data: payrolls,
+      data: processedPayrolls,
       pagination: {
         current: parseInt(page),
         pages: Math.ceil(total / parseInt(limit)),
         total: total
       },
-      count: payrolls.length
+      count: processedPayrolls.length
     });
 
   } catch (error) {
@@ -276,8 +282,7 @@ export const getPayrollById = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const payroll = await Payroll.findById(id)
-      .populate('employeeId', 'name employeeId department email');
+    const payroll = await Payroll.findById(id);
 
     if (!payroll) {
       return res.status(404).json({

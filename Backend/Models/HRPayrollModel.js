@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
 
 const PayrollSchema = new mongoose.Schema({
-  employeeId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Employee',
-    required: true
+  employeeIdDisplay: {
+    type: String,
+    required: true,
+    trim: true
   },
   employeeName: {
     type: String,
@@ -43,7 +43,7 @@ const PayrollSchema = new mongoose.Schema({
 });
 
 // Compound index to prevent duplicate payroll records for same employee and month
-PayrollSchema.index({ employeeId: 1, month: 1 }, { unique: true });
+PayrollSchema.index({ employeeIdDisplay: 1, month: 1 }, { unique: true });
 
 // Update the updatedAt field before saving
 PayrollSchema.pre('save', function(next) {

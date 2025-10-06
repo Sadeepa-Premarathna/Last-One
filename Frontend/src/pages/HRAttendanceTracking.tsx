@@ -1,69 +1,135 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import axios from 'axios';
 import { Calendar, Clock, Users, Download, Upload, Search, Filter, ChevronLeft, ChevronRight, Edit, Check, X, AlertCircle } from 'lucide-react';
 import { AttendanceRecord, Employee } from '../types';
+import { API_ENDPOINTS } from '../config/api';
 import AttendanceCorrectionModal from '../components/HRAttendanceCorrectionModal';
 import BulkUploadModal from '../components/HRBulkUploadModal';
 
-interface AttendanceTrackingProps {
-  employees: Employee[];
-  attendanceRecords: AttendanceRecord[];
-  onAttendanceUpdate: (records: AttendanceRecord[]) => void;
-}
+interface AttendanceTrackingProps {}
 
-const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({ 
-  employees, 
-  attendanceRecords, 
-  onAttendanceUpdate 
-}) => {
+const AttendanceTracking: React.FC<AttendanceTrackingProps> = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'daily' | 'weekly' | 'monthly'>('daily');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(''); // Now for Employee ID only
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [showCorrectionModal, setShowCorrectionModal] = useState(false);
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  
+  // New state for API data
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState({
+    Present: 0,
+    Absent: 0,
+    Late: 0,
+    Leave: 0
+  });
+
+  // Fetch employees data
+  const fetchEmployees = async () => {
+    try {
+      const response = await axios.get(API_ENDPOINTS.employees);
+      if (response.data.success) {
+        setEmployees(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      setError('Failed to fetch employees data');
+    }
+  };
+
+  // Fetch attendance records
+  const fetchAttendanceRecords = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      const params: any = { date: dateStr };
+      
+      // Add search filter for Employee ID only
+      if (searchTerm.trim()) {
+        params.employeeId = searchTerm.trim();
+      }
+      
+      if (selectedDepartment) {
+        params.department = selectedDepartment;
+      }
+      
+      if (selectedStatus) {
+        params.status = selectedStatus;
+      }
+
+      const response = await axios.get(API_ENDPOINTS.attendance, { params });
+      
+      if (response.data.success) {
+        const records = response.data.data.map((record: any) => ({
+          id: record.id,
+          employeeId: record.employeeId,
+          date: record.date,
+          clockIn: record.clockIn,
+          clockOut: record.clockOut,
+          status: record.status,
+          hoursWorked: record.hoursWorked,
+          correctionReason: record.correctionReason,
+          correctedBy: record.correctedBy,
+          correctedAt: record.correctedAt,
+          requiresApproval: record.requiresApproval,
+          uploadedBy: record.uploadedBy,
+          uploadedAt: record.uploadedAt,
+          employee: record.employee
+        }));
+        
+        setAttendanceRecords(records);
+      } else {
+        setError('Failed to fetch attendance records');
+      }
+    } catch (error) {
+      console.error('Error fetching attendance records:', error);
+      setError('Failed to fetch attendance records');
+      setAttendanceRecords([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch attendance statistics
+  const fetchAttendanceStats = async () => {
+    try {
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      const response = await axios.get(`${API_ENDPOINTS.attendance}/stats`, {
+        params: { date: dateStr }
+      });
+      
+      if (response.data.success) {
+        setStats(response.data.data.stats);
+      }
+    } catch (error) {
+      console.error('Error fetching attendance stats:', error);
+    }
+  };
+
+  // Load data when component mounts or date/filters change
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  useEffect(() => {
+    fetchAttendanceRecords();
+    fetchAttendanceStats();
+  }, [selectedDate, searchTerm, selectedDepartment, selectedStatus]);
 
   // Get unique departments
   const departments = useMemo(() => 
     [...new Set(employees.map(emp => emp.department))].sort(), 
     [employees]
   );
-
-  // Filter attendance records for selected date
-  const dailyRecords = useMemo(() => {
-    const dateStr = selectedDate.toISOString().split('T')[0];
-    return attendanceRecords.filter(record => record.date === dateStr);
-  }, [attendanceRecords, selectedDate]);
-
-  // Filter and search records
-  const filteredRecords = useMemo(() => {
-    let filtered = dailyRecords;
-
-    if (searchTerm) {
-      filtered = filtered.filter(record => {
-        const employee = employees.find(emp => emp.id === record.employeeId);
-        return employee && (
-          employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          employee.employeeId.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      });
-    }
-
-    if (selectedDepartment) {
-      filtered = filtered.filter(record => {
-        const employee = employees.find(emp => emp.id === record.employeeId);
-        return employee && employee.department === selectedDepartment;
-      });
-    }
-
-    if (selectedStatus) {
-      filtered = filtered.filter(record => record.status === selectedStatus);
-    }
-
-    return filtered;
-  }, [dailyRecords, searchTerm, selectedDepartment, selectedStatus, employees]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -116,8 +182,8 @@ const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({
     const headers = ['Date', 'Employee ID', 'Name', 'Department', 'Clock In', 'Clock Out', 'Hours Worked', 'Status'];
     const csvContent = [
       headers.join(','),
-      ...filteredRecords.map(record => {
-        const employee = employees.find(emp => emp.id === record.employeeId);
+      ...attendanceRecords.map(record => {
+        const employee = record.employee;
         return [
           record.date,
           employee?.employeeId || '',
@@ -140,25 +206,43 @@ const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({
     window.URL.revokeObjectURL(url);
   };
 
-  const handleCorrection = (correctedRecord: AttendanceRecord) => {
-    const updatedRecords = attendanceRecords.map(record => 
-      record.id === correctedRecord.id ? correctedRecord : record
-    );
-    onAttendanceUpdate(updatedRecords);
-    setShowCorrectionModal(false);
-    setSelectedRecord(null);
+  const handleCorrection = async (correctedRecord: AttendanceRecord) => {
+    try {
+      // Update via API
+      await axios.put(`${API_ENDPOINTS.attendance}/${correctedRecord.id}`, correctedRecord);
+      
+      // Refresh data
+      fetchAttendanceRecords();
+      fetchAttendanceStats();
+      
+      setShowCorrectionModal(false);
+      setSelectedRecord(null);
+    } catch (error) {
+      console.error('Error updating attendance record:', error);
+      setError('Failed to update attendance record');
+    }
   };
 
-  const handleBulkUpload = (newRecords: AttendanceRecord[]) => {
-    const updatedRecords = [...attendanceRecords, ...newRecords];
-    onAttendanceUpdate(updatedRecords);
-    setShowBulkUploadModal(false);
+  const handleBulkUpload = async (newRecords: AttendanceRecord[]) => {
+    try {
+      // Upload via API
+      await axios.post(`${API_ENDPOINTS.attendance}/bulk`, { records: newRecords });
+      
+      // Refresh data
+      fetchAttendanceRecords();
+      fetchAttendanceStats();
+      
+      setShowBulkUploadModal(false);
+    } catch (error) {
+      console.error('Error uploading attendance records:', error);
+      setError('Failed to upload attendance records');
+    }
   };
 
   // Get missing entries (employees without attendance records for selected date)
   const missingEntries = employees.filter(emp => 
     emp.status === 'Active' && 
-    !dailyRecords.some(record => record.employeeId === emp.id)
+    !attendanceRecords.some(record => record.employeeId === emp.employeeId)
   );
 
   return (
@@ -247,7 +331,7 @@ const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <input
                   type="text"
-                  placeholder="Search by name or employee ID..."
+                  placeholder="Search by Employee ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -329,6 +413,26 @@ const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({
         </div>
       )}
 
+      {/* Error State */}
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2">
+            <X className="h-5 w-5 text-red-600" />
+            <p className="text-red-700">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+            <p className="text-blue-700">Loading attendance data...</p>
+          </div>
+        </div>
+      )}
+
       {/* Attendance Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -336,7 +440,7 @@ const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({
             <div>
               <p className="text-gray-600 text-sm font-medium">Present</p>
               <p className="text-2xl font-bold text-green-600">
-                {filteredRecords.filter(r => r.status === 'Present').length}
+                {stats?.Present || 0}
               </p>
             </div>
             <div className="p-3 rounded-full bg-green-100">
@@ -350,7 +454,7 @@ const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({
             <div>
               <p className="text-gray-600 text-sm font-medium">Absent</p>
               <p className="text-2xl font-bold text-red-600">
-                {filteredRecords.filter(r => r.status === 'Absent').length}
+                {stats?.Absent || 0}
               </p>
             </div>
             <div className="p-3 rounded-full bg-red-100">
@@ -364,7 +468,7 @@ const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({
             <div>
               <p className="text-gray-600 text-sm font-medium">Late</p>
               <p className="text-2xl font-bold text-orange-600">
-                {filteredRecords.filter(r => r.status === 'Late').length}
+                {stats?.Late || 0}
               </p>
             </div>
             <div className="p-3 rounded-full bg-orange-100">
@@ -378,7 +482,7 @@ const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({
             <div>
               <p className="text-gray-600 text-sm font-medium">On Leave</p>
               <p className="text-2xl font-bold text-yellow-600">
-                {filteredRecords.filter(r => r.status === 'Leave').length}
+                {stats?.Leave || 0}
               </p>
             </div>
             <div className="p-3 rounded-full bg-yellow-100">
@@ -393,7 +497,7 @@ const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">Daily Attendance Records</h3>
           <p className="text-sm text-gray-600 mt-1">
-            Showing {filteredRecords.length} records for {selectedDate.toLocaleDateString()}
+            Showing {attendanceRecords.length} records for {selectedDate.toLocaleDateString()}
           </p>
         </div>
 
@@ -425,8 +529,8 @@ const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredRecords.map((record, index) => {
-                const employee = employees.find(emp => emp.id === record.employeeId);
+              {attendanceRecords.map((record, index) => {
+                const employee = record.employee;
                 if (!employee) return null;
 
                 return (
@@ -487,7 +591,7 @@ const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({
           </table>
         </div>
 
-        {filteredRecords.length === 0 && (
+        {attendanceRecords.length === 0 && !loading && (
           <div className="text-center py-12">
             <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500">No attendance records found for the selected criteria.</p>

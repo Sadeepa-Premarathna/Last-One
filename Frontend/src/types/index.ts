@@ -35,6 +35,13 @@ export interface AttendanceRecord {
   requiresApproval?: boolean;
   uploadedBy?: string;
   uploadedAt?: string;
+  employee?: {
+    id: string;
+    employeeId: string;
+    name: string;
+    department: string;
+    role: string;
+  } | null;
 }
 
 export interface DashboardData {

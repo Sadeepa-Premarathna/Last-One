@@ -8,15 +8,14 @@ import AttendanceTracking from './pages/HRAttendanceTracking';
 import PayrollManagement from './pages/HRPayrollManagement';
 import LeaveManagement from './pages/HRLeaveManagement';
 import Reports from './pages/HRReports';
-import { getAttendanceRecords } from './data/mockData';
-import { Employee, AttendanceRecord, DashboardData } from './types';
+
+import { Employee, DashboardData } from './types';
 import { API_ENDPOINTS } from './config/api';
 
 function App() {
   const [activeMenuItem, setActiveMenuItem] = useState('dashboard');
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refreshEmployees = async () => {
@@ -117,10 +116,6 @@ function App() {
         // Generate dashboard data from real employee data
         const dashData = generateDashboardData(empData);
         setDashboardData(dashData);
-        
-        // Get attendance data (this can be replaced with real data later)
-        const attData = getAttendanceRecords();
-        setAttendanceRecords(attData);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -184,27 +179,6 @@ function App() {
     }
   };
 
-  const handleAttendanceUpdate = (updatedRecords: AttendanceRecord[]) => {
-    setAttendanceRecords(updatedRecords);
-    
-    // Update dashboard attendance rate
-    if (dashboardData) {
-      const today = new Date().toISOString().split('T')[0];
-      const todayRecords = updatedRecords.filter(record => record.date === today);
-      const presentCount = todayRecords.filter(record => record.status === 'Present' || record.status === 'Late').length;
-      const totalCount = todayRecords.length;
-      const attendanceRate = totalCount > 0 ? (presentCount / totalCount) * 100 : 0;
-      
-      setDashboardData({
-        ...dashboardData,
-        kpis: {
-          ...dashboardData.kpis,
-          attendanceRate: Math.round(attendanceRate * 10) / 10,
-        }
-      });
-    }
-  };
-
   const handlePayrollUpdate = (totalExpense: number) => {
     // Update dashboard data with new payroll expense
     if (dashboardData) {
@@ -242,9 +216,9 @@ function App() {
             await refreshEmployees();
           }} />;
       case 'attendance':
-        return <AttendanceTracking employees={employees} attendanceRecords={attendanceRecords} onAttendanceUpdate={handleAttendanceUpdate} />;
+        return <AttendanceTracking />;
       case 'payroll':
-        return <PayrollManagement employees={employees} attendanceRecords={attendanceRecords} onPayrollUpdate={handlePayrollUpdate} />;
+        return <PayrollManagement onPayrollUpdate={handlePayrollUpdate} />;
       case 'leaves':
         return <LeaveManagement />;
       case 'reports':

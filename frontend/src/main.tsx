@@ -1,10 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App.tsx';
-import './index.css';
+import InventoryApp from './InventoryApp.tsx';
+import './inventoryStyles.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <InventoryApp />
   </React.StrictMode>
 );

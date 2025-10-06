@@ -1,32 +1,7 @@
-import mongoose, { Document, Schema } from 'mongoose';
+const mongoose = require('mongoose');
+const { Schema } = mongoose;
 
-export interface IProduct extends Document {
-  name: string;
-  category: string;
-  description: string;
-  price: number;
-  stock: number;
-  unit: string;
-  manufactureDate: Date;
-  expiryDays: number;
-  batchNumber: string;
-  supplier: string;
-  image: string;
-  minStockLevel: number;
-  status: 'active' | 'low-stock' | 'out-of-stock' | 'expired';
-  // Shop-specific fields
-  brand: string;
-  isOrganic: boolean;
-  fatContent?: number;
-  volume?: number;
-  rating: number;
-  numReviews: number;
-  featured: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const ProductSchema: Schema = new Schema(
+const ProductSchema = new Schema(
   {
     name: {
       type: String,
@@ -143,7 +118,7 @@ const ProductSchema: Schema = new Schema(
 );
 
 // Update status based on stock and expiry (for save operations)
-ProductSchema.pre<IProduct>('save', function(next) {
+ProductSchema.pre('save', function(next) {
   const now = new Date();
   const expiryDate = new Date(this.manufactureDate);
   expiryDate.setDate(expiryDate.getDate() + this.expiryDays);
@@ -163,7 +138,7 @@ ProductSchema.pre<IProduct>('save', function(next) {
 
 // Update status based on stock and expiry (for update operations)
 ProductSchema.pre('findOneAndUpdate', function(next) {
-  const update = this.getUpdate() as any;
+  const update = this.getUpdate();
   const now = new Date();
   
   // Get the update data
@@ -223,4 +198,4 @@ ProductSchema.index({ price: 1 });
 ProductSchema.index({ rating: -1 });
 ProductSchema.index({ batchNumber: 1 }, { unique: true });
 
-export default mongoose.model<IProduct>('Product', ProductSchema);
+module.exports = mongoose.model('Product', ProductSchema);

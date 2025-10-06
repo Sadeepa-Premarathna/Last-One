@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
 import { FaEdit, FaTrash, FaExclamationTriangle } from 'react-icons/fa';
-import { Product } from '../types';
-import { formatDate, formatCurrency, getExpiryStatus, getStatusColor } from '../utils/helpers';
-import './ProductCard.css';
+import { Product } from '../types/inventoryTypes';
+import { formatDate, formatCurrency, getExpiryStatus, getStatusColor } from '../utils/inventoryHelpers';
+import './InventoryCard.css';
 
 interface ProductCardProps {
   product: Product;

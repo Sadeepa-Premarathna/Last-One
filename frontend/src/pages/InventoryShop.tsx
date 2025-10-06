@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaShoppingCart, FaSearch, FaFilter, FaBox, FaInfoCircle } from 'react-icons/fa';
+import { FaShoppingCart, FaHeart, FaStar, FaFilter, FaSearch, FaBox, FaInfoCircle } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import { Product } from '../types';
-import { productService } from '../services/api';
-import './Shop.css';
+import { Product } from '../types/inventoryTypes';
+import { productService } from '../services/inventoryApi';
+import './InventoryShop.css';
 
 const Shop = () => {
   const [products, setProducts] = useState<Product[]>([]);

@@ -1,17 +1,16 @@
-import express, { Application, Request, Response } from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import connectDB from './config/database';
-import productRoutes from './routes/productRoutes';
-import rawMilkRoutes from './routes/rawMilkRoutes';
-
-import { errorHandler } from './middleware/errorHandler';
-import cron from 'node-cron';
-import Product from './models/Product';
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const connectDB = require('./config/inventoryDatabase');
+const inventoryRoutes = require('./routes/inventoryRoutes');
+const inventoryRawMilkRoutes = require('./routes/inventoryRawMilkRoutes');
+const { errorHandler } = require('./middleware/inventoryErrorHandler');
+const cron = require('node-cron');
+const InventoryProduct = require('./models/InventoryProduct');
 
 dotenv.config();
 
-const app: Application = express();
+const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
@@ -23,7 +22,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' })); // Increased lim
 connectDB();
 
 // Routes
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (req, res) => {
   res.json({
     message: '🥛 Welcome to Dairy Licious Inventory API',
     version: '1.0.0',
@@ -36,8 +35,8 @@ app.get('/', (req: Request, res: Response) => {
   });
 });
 
-app.use('/api/products', productRoutes);
-app.use('/api/rawmilk', rawMilkRoutes);
+app.use('/api/products', inventoryRoutes);
+app.use('/api/rawmilk', inventoryRawMilkRoutes);
 
 // Error Handler
 app.use(errorHandler);
@@ -46,7 +45,7 @@ app.use(errorHandler);
 cron.schedule('0 0 * * *', async () => {
   try {
     const now = new Date();
-    await Product.updateMany(
+    await InventoryProduct.updateMany(
       { expiryDate: { $lt: now }, status: { $ne: 'expired' } },
       { status: 'expired' }
     );
@@ -62,4 +61,4 @@ app.listen(PORT, () => {
   console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
 });
 
-export default app;
+module.exports = app;

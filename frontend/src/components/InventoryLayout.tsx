@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react';
-import Sidebar from './Sidebar.tsx';
-import './Layout.css';
+import InventorySidebar from './InventorySidebar';
+import './InventoryLayout.css';
 
 interface LayoutProps {
   children: ReactNode;
@@ -11,7 +11,7 @@ const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="layout">
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+      <InventorySidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       <div className={`main-content ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
         <div className="content-wrapper">
           {children}

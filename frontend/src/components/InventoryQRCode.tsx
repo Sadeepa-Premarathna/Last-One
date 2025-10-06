@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaMobileAlt, FaQrcode } from 'react-icons/fa';
 import { QRCodeSVG } from 'qrcode.react';
-import './QRCodeModal.css';
+import './InventoryQRCode.css';
 
 interface QRCodeModalProps {
   onClose: () => void;

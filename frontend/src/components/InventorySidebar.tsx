@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { FaBox, FaChartLine, FaBrain, FaBars, FaTimes, FaShoppingCart } from 'react-icons/fa';
 import { motion } from 'framer-motion';
-import './Sidebar.css';
+import './InventorySidebar.css';
 
 interface SidebarProps {
   isOpen: boolean;

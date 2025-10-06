@@ -27,12 +27,12 @@ import {
   AreaChart,
   Area
 } from 'recharts';
-import { DashboardStats, Product } from '../types';
-import { productService } from '../services/api';
-import { formatCurrency } from '../utils/helpers';
-import ProductReport from '../components/ProductReport';
-import AIAnalyzer from '../components/AIAnalyzer';
-import './Dashboard.css';
+import { DashboardStats, Product } from '../types/inventoryTypes';
+import { productService } from '../services/inventoryApi';
+import { formatCurrency } from '../utils/inventoryHelpers';
+import InventoryReport from '../components/InventoryReport';
+import InventoryAIInsights from '../components/InventoryAIInsights';
+import './InventoryDashboard.css';
 
 const Dashboard = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -446,14 +446,14 @@ const Dashboard = () => {
       )}
 
       {showReport && (
-        <ProductReport
+        <InventoryReport
           products={reportProducts}
           onClose={() => setShowReport(false)}
         />
       )}
 
       {showAIAnalyzer && (
-        <AIAnalyzer
+        <InventoryAIInsights
           products={allProducts}
           onClose={() => setShowAIAnalyzer(false)}
         />

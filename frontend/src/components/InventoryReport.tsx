@@ -1,8 +1,8 @@
 import { useRef } from 'react';
-import { Product } from '../types';
-import { formatCurrency, formatDate } from '../utils/helpers';
+import { Product } from '../types/inventoryTypes';
+import { formatCurrency, formatDate } from '../utils/inventoryHelpers';
 import { FaPrint, FaDownload } from 'react-icons/fa';
-import './ProductReport.css';
+import './InventoryReport.css';
 
 interface ProductReportProps {
   products: Product[];

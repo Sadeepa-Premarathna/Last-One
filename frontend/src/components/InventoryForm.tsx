@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaUpload, FaImage } from 'react-icons/fa';
-import { Product, ProductFormData } from '../types';
-import { productService } from '../services/api';
-import './ProductForm.css';
+import { Product, ProductFormData } from '../types/inventoryTypes';
+import { productService } from '../services/inventoryApi';
+import './InventoryForm.css';
 
 interface ProductFormProps {
   product?: Product | null;

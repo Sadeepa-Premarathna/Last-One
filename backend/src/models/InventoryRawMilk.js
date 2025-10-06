@@ -1,23 +1,7 @@
-import mongoose, { Document, Schema } from 'mongoose';
+const mongoose = require('mongoose');
+const { Schema } = mongoose;
 
-export interface IRawMilk extends Document {
-  supplierName: string;
-  contactNumber: string;
-  collectionDate: Date;
-  quantity: number;
-  unit: string;
-  fatContent: number;
-  quality: 'A' | 'B' | 'C';
-  pricePerLiter: number;
-  totalAmount: number;
-  location: string;
-  notes?: string;
-  paymentStatus: 'pending' | 'paid';
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const RawMilkSchema: Schema = new Schema(
+const RawMilkSchema = new Schema(
   {
     supplierName: {
       type: String,
@@ -96,4 +80,4 @@ RawMilkSchema.index({ collectionDate: -1 });
 RawMilkSchema.index({ supplierName: 1 });
 RawMilkSchema.index({ paymentStatus: 1 });
 
-export default mongoose.model<IRawMilk>('RawMilk', RawMilkSchema);
+module.exports = mongoose.model('RawMilk', RawMilkSchema);

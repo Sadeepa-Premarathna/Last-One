@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaBrain, FaRedo } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import { Product } from '../types';
-import { productService } from '../services/api';
-import AIAnalyzer from '../components/AIAnalyzer';
-import './AIAnalyzerPage.css';
+import { Product } from '../types/inventoryTypes';
+import { productService } from '../services/inventoryApi';
+import InventoryAIInsights from '../components/InventoryAIInsights';
+import './InventoryAIAnalyzer.css';
 
 const AIAnalyzerPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -105,7 +105,7 @@ const AIAnalyzerPage = () => {
 
           {showAnalyzer && (
             <div className="analyzer-container">
-              <AIAnalyzer
+              <InventoryAIInsights
                 products={products}
                 onClose={() => {
                   // Don't close on this page, just stay open

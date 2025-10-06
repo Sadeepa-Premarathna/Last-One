@@ -1,32 +1,32 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Layout from './components/Layout';
-import Products from './pages/Products';
-import Dashboard from './pages/Dashboard.tsx';
-import AIAnalyzerPage from './pages/AIAnalyzerPage';
-import MobileProductForm from './pages/MobileProductForm';
-import Shop from './pages/Shop';
-import RawMaterial from './pages/RawMaterial';
+import InventoryLayout from './components/InventoryLayout';
+import InventoryProducts from './pages/InventoryProducts';
+import InventoryDashboard from './pages/InventoryDashboard';
+import InventoryAIAnalyzer from './pages/InventoryAIAnalyzer';
+import InventoryMobileForm from './pages/InventoryMobileForm';
+import InventoryShop from './pages/InventoryShop';
+import InventoryRawMaterial from './pages/InventoryRawMaterial';
 
 function App() {
   return (
     <Router>
       <Routes>
         {/* Mobile form route without layout */}
-        <Route path="/add-product-mobile" element={<MobileProductForm />} />
+        <Route path="/add-product-mobile" element={<InventoryMobileForm />} />
         
         {/* Desktop routes with layout */}
         <Route path="*" element={
-          <Layout>
+          <InventoryLayout>
             <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/raw-material" element={<RawMaterial />} />
-              <Route path="/shop" element={<Shop />} />
-              <Route path="/ai-analyzer" element={<AIAnalyzerPage />} />
+              <Route path="/" element={<InventoryDashboard />} />
+              <Route path="/products" element={<InventoryProducts />} />
+              <Route path="/raw-material" element={<InventoryRawMaterial />} />
+              <Route path="/shop" element={<InventoryShop />} />
+              <Route path="/ai-analyzer" element={<InventoryAIAnalyzer />} />
             </Routes>
-          </Layout>
+          </InventoryLayout>
         } />
       </Routes>
       <ToastContainer

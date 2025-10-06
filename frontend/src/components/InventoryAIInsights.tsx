@@ -11,9 +11,9 @@ import {
   FaClock,
   FaArrowUp
 } from 'react-icons/fa';
-import { Product } from '../types';
-import { formatCurrency, formatDate } from '../utils/helpers';
-import './AIAnalyzer.css';
+import { Product } from '../types/inventoryTypes';
+import { formatCurrency, formatDate } from '../utils/inventoryHelpers';
+import './InventoryAIInsights.css';
 
 interface AIAnalyzerProps {
   products: Product[];

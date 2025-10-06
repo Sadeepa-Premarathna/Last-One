@@ -1,16 +1,15 @@
-import { Request, Response } from 'express';
-import Product, { IProduct } from '../models/Product';
+const InventoryProduct = require('../models/InventoryProduct');
 
 // Get all products
-export const getAllProducts = async (req: Request, res: Response): Promise<void> => {
+const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    const products = await InventoryProduct.find().sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
       count: products.length,
       data: products
     });
-  } catch (error: any) {
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error fetching products',
@@ -20,9 +19,9 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
 };
 
 // Get single product
-export const getProductById = async (req: Request, res: Response): Promise<void> => {
+const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await InventoryProduct.findById(req.params.id);
     
     if (!product) {
       res.status(404).json({
@@ -36,7 +35,7 @@ export const getProductById = async (req: Request, res: Response): Promise<void>
       success: true,
       data: product
     });
-  } catch (error: any) {
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error fetching product',
@@ -46,16 +45,16 @@ export const getProductById = async (req: Request, res: Response): Promise<void>
 };
 
 // Create product
-export const createProduct = async (req: Request, res: Response): Promise<void> => {
+const createProduct = async (req, res) => {
   try {
-    const product = await Product.create(req.body);
+    const product = await InventoryProduct.create(req.body);
     
     res.status(201).json({
       success: true,
       message: 'Product created successfully',
       data: product
     });
-  } catch (error: any) {
+  } catch (error) {
     // Handle duplicate batch number error
     if (error.code === 11000) {
       res.status(400).json({
@@ -75,7 +74,7 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
 };
 
 // Update product
-export const updateProduct = async (req: Request, res: Response): Promise<void> => {
+const updateProduct = async (req, res) => {
   try {
     // Remove batchNumber from update data as it's unique and immutable
     const updateData = { ...req.body };
@@ -90,7 +89,7 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
       return;
     }
     
-    const product = await Product.findByIdAndUpdate(
+    const product = await InventoryProduct.findByIdAndUpdate(
       req.params.id,
       updateData,
       {
@@ -113,10 +112,10 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
       message: 'Product updated successfully',
       data: product
     });
-  } catch (error: any) {
+  } catch (error) {
     // Handle validation errors
     if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map((err: any) => err.message);
+      const messages = Object.values(error.errors).map((err) => err.message);
       res.status(400).json({
         success: false,
         message: messages.join(', '),
@@ -134,9 +133,9 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
 };
 
 // Delete product
-export const deleteProduct = async (req: Request, res: Response): Promise<void> => {
+const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
+    const product = await InventoryProduct.findByIdAndDelete(req.params.id);
     
     if (!product) {
       res.status(404).json({
@@ -150,7 +149,7 @@ export const deleteProduct = async (req: Request, res: Response): Promise<void> 
       success: true,
       message: 'Product deleted successfully'
     });
-  } catch (error: any) {
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error deleting product',
@@ -160,14 +159,14 @@ export const deleteProduct = async (req: Request, res: Response): Promise<void> 
 };
 
 // Get expiring products (within 7 days)
-export const getExpiringProducts = async (req: Request, res: Response): Promise<void> => {
+const getExpiringProducts = async (req, res) => {
   try {
     const now = new Date();
     const sevenDaysFromNow = new Date();
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
     
     // Get all products and calculate expiry date
-    const allProducts = await Product.find({ status: { $ne: 'expired' } });
+    const allProducts = await InventoryProduct.find({ status: { $ne: 'expired' } });
     
     const expiringProducts = allProducts.filter(product => {
       const expiryDate = new Date(product.manufactureDate);
@@ -186,7 +185,7 @@ export const getExpiringProducts = async (req: Request, res: Response): Promise<
       count: expiringProducts.length,
       data: expiringProducts
     });
-  } catch (error: any) {
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error fetching expiring products',
@@ -196,9 +195,9 @@ export const getExpiringProducts = async (req: Request, res: Response): Promise<
 };
 
 // Get low stock products
-export const getLowStockProducts = async (req: Request, res: Response): Promise<void> => {
+const getLowStockProducts = async (req, res) => {
   try {
-    const lowStockProducts = await Product.find({
+    const lowStockProducts = await InventoryProduct.find({
       status: { $in: ['low-stock', 'out-of-stock'] }
     }).sort({ stock: 1 });
     
@@ -207,7 +206,7 @@ export const getLowStockProducts = async (req: Request, res: Response): Promise<
       count: lowStockProducts.length,
       data: lowStockProducts
     });
-  } catch (error: any) {
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error fetching low stock products',
@@ -217,14 +216,14 @@ export const getLowStockProducts = async (req: Request, res: Response): Promise<
 };
 
 // Get dashboard statistics
-export const getDashboardStats = async (req: Request, res: Response): Promise<void> => {
+const getDashboardStats = async (req, res) => {
   try {
-    const totalProducts = await Product.countDocuments();
-    const activeProducts = await Product.countDocuments({ status: 'active' });
-    const lowStockProducts = await Product.countDocuments({ status: 'low-stock' });
-    const expiredProducts = await Product.countDocuments({ status: 'expired' });
+    const totalProducts = await InventoryProduct.countDocuments();
+    const activeProducts = await InventoryProduct.countDocuments({ status: 'active' });
+    const lowStockProducts = await InventoryProduct.countDocuments({ status: 'low-stock' });
+    const expiredProducts = await InventoryProduct.countDocuments({ status: 'expired' });
     
-    const totalValue = await Product.aggregate([
+    const totalValue = await InventoryProduct.aggregate([
       {
         $group: {
           _id: null,
@@ -243,11 +242,22 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<vo
         totalInventoryValue: totalValue[0]?.total || 0
       }
     });
-  } catch (error: any) {
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error fetching dashboard statistics',
       error: error.message
     });
   }
+};
+
+module.exports = {
+  getAllProducts,
+  getProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  getExpiringProducts,
+  getLowStockProducts,
+  getDashboardStats
 };

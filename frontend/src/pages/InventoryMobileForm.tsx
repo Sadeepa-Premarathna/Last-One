@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaCheck, FaArrowLeft } from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
-import { ProductFormData, Product } from '../types';
-import { productService } from '../services/api';
-import './MobileProductForm.css';
+import { ProductFormData, Product } from '../types/inventoryTypes';
+import { productService } from '../services/inventoryApi';
+import './InventoryMobileForm.css';
 
 const MobileProductForm = () => {
   const navigate = useNavigate();

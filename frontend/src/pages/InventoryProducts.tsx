@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaPlus, FaExclamationTriangle, FaFileAlt, FaBrain, FaQrcode } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import ProductCard from '../components/ProductCard';
-import ProductForm from '../components/ProductForm';
-import ProductReport from '../components/ProductReport';
-import AIAnalyzer from '../components/AIAnalyzer';
-import QRCodeModal from '../components/QRCodeModal';
-import { Product, ProductFormData } from '../types';
-import { productService } from '../services/api';
-import './Products.css';
+import InventoryCard from '../components/InventoryCard';
+import InventoryForm from '../components/InventoryForm';
+import InventoryReport from '../components/InventoryReport';
+import InventoryAIInsights from '../components/InventoryAIInsights';
+import InventoryQRCode from '../components/InventoryQRCode';
+import { Product, ProductFormData } from '../types/inventoryTypes';
+import { productService } from '../services/inventoryApi';
+import './InventoryProducts.css';
 
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -220,7 +220,7 @@ const Products = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <ProductCard
+              <InventoryCard
                 product={product}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
@@ -231,7 +231,7 @@ const Products = () => {
       )}
 
       {showForm && (
-        <ProductForm
+        <InventoryForm
           product={selectedProduct}
           onSubmit={selectedProduct ? handleUpdate : handleCreate}
           onClose={handleCloseForm}
@@ -239,7 +239,7 @@ const Products = () => {
       )}
 
       {showReport && (
-        <ProductReport
+        <InventoryReport
           products={products}
           reportType="all"
           onClose={() => setShowReport(false)}
@@ -247,14 +247,14 @@ const Products = () => {
       )}
 
       {showAIAnalyzer && (
-        <AIAnalyzer
+        <InventoryAIInsights
           products={products}
           onClose={() => setShowAIAnalyzer(false)}
         />
       )}
 
       {showQRCode && (
-        <QRCodeModal
+        <InventoryQRCode
           onClose={() => setShowQRCode(false)}
         />
       )}

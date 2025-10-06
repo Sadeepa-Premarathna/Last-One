@@ -1,12 +1,12 @@
-import express from 'express';
-import {
+const express = require('express');
+const {
   getAllRawMilk,
   getRawMilkById,
   createRawMilk,
   updateRawMilk,
   deleteRawMilk,
   getRawMilkStats
-} from '../controllers/rawMilkController';
+} = require('../controllers/inventoryRawMilkController');
 
 const router = express.Router();
 
@@ -17,4 +17,4 @@ router.post('/', createRawMilk);
 router.put('/:id', updateRawMilk);
 router.delete('/:id', deleteRawMilk);
 
-export default router;
+module.exports = router;

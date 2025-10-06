@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import { RawMilk, RawMilkFormData } from '../types';
-import { rawMilkService } from '../services/api';
-import './RawMilkForm.css';
+import { RawMilk, RawMilkFormData } from '../types/inventoryTypes';
+import { rawMilkService } from '../services/inventoryApi';
+import './InventoryRawMilkForm.css';
 
 interface RawMilkFormProps {
   record?: RawMilk | null;

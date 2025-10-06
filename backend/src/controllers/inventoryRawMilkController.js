@@ -1,10 +1,9 @@
-import { Request, Response } from 'express';
-import RawMilk from '../models/RawMilk';
+const InventoryRawMilk = require('../models/InventoryRawMilk');
 
 // Get all raw milk collections
-export const getAllRawMilk = async (req: Request, res: Response) => {
+const getAllRawMilk = async (req, res) => {
   try {
-    const rawMilk = await RawMilk.find().sort({ collectionDate: -1 });
+    const rawMilk = await InventoryRawMilk.find().sort({ collectionDate: -1 });
     res.json(rawMilk);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching raw milk data', error });
@@ -12,9 +11,9 @@ export const getAllRawMilk = async (req: Request, res: Response) => {
 };
 
 // Get raw milk by ID
-export const getRawMilkById = async (req: Request, res: Response) => {
+const getRawMilkById = async (req, res) => {
   try {
-    const rawMilk = await RawMilk.findById(req.params.id);
+    const rawMilk = await InventoryRawMilk.findById(req.params.id);
     if (!rawMilk) {
       return res.status(404).json({ message: 'Raw milk record not found' });
     }
@@ -25,20 +24,20 @@ export const getRawMilkById = async (req: Request, res: Response) => {
 };
 
 // Create new raw milk collection
-export const createRawMilk = async (req: Request, res: Response) => {
+const createRawMilk = async (req, res) => {
   try {
-    const rawMilk = new RawMilk(req.body);
+    const rawMilk = new InventoryRawMilk(req.body);
     const savedRawMilk = await rawMilk.save();
     res.status(201).json(savedRawMilk);
-  } catch (error: any) {
+  } catch (error) {
     res.status(400).json({ message: 'Error creating raw milk record', error: error.message });
   }
 };
 
 // Update raw milk collection
-export const updateRawMilk = async (req: Request, res: Response) => {
+const updateRawMilk = async (req, res) => {
   try {
-    const rawMilk = await RawMilk.findByIdAndUpdate(
+    const rawMilk = await InventoryRawMilk.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true, runValidators: true }
@@ -47,15 +46,15 @@ export const updateRawMilk = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Raw milk record not found' });
     }
     res.json(rawMilk);
-  } catch (error: any) {
+  } catch (error) {
     res.status(400).json({ message: 'Error updating raw milk record', error: error.message });
   }
 };
 
 // Delete raw milk collection
-export const deleteRawMilk = async (req: Request, res: Response) => {
+const deleteRawMilk = async (req, res) => {
   try {
-    const rawMilk = await RawMilk.findByIdAndDelete(req.params.id);
+    const rawMilk = await InventoryRawMilk.findByIdAndDelete(req.params.id);
     if (!rawMilk) {
       return res.status(404).json({ message: 'Raw milk record not found' });
     }
@@ -66,16 +65,16 @@ export const deleteRawMilk = async (req: Request, res: Response) => {
 };
 
 // Get statistics
-export const getRawMilkStats = async (req: Request, res: Response) => {
+const getRawMilkStats = async (req, res) => {
   try {
-    const totalRecords = await RawMilk.countDocuments();
-    const totalQuantity = await RawMilk.aggregate([
+    const totalRecords = await InventoryRawMilk.countDocuments();
+    const totalQuantity = await InventoryRawMilk.aggregate([
       { $group: { _id: null, total: { $sum: '$quantity' } } }
     ]);
-    const totalAmount = await RawMilk.aggregate([
+    const totalAmount = await InventoryRawMilk.aggregate([
       { $group: { _id: null, total: { $sum: '$totalAmount' } } }
     ]);
-    const pendingPayments = await RawMilk.countDocuments({ paymentStatus: 'pending' });
+    const pendingPayments = await InventoryRawMilk.countDocuments({ paymentStatus: 'pending' });
     
     res.json({
       totalRecords,
@@ -86,4 +85,13 @@ export const getRawMilkStats = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: 'Error fetching statistics', error });
   }
+};
+
+module.exports = {
+  getAllRawMilk,
+  getRawMilkById,
+  createRawMilk,
+  updateRawMilk,
+  deleteRawMilk,
+  getRawMilkStats
 };

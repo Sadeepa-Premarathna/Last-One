@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import { RawMilk } from '../types';
-import { rawMilkService } from '../services/api';
-import RawMilkForm from '../components/RawMilkForm.tsx';
-import './RawMaterial.css';
+import { RawMilk } from '../types/inventoryTypes';
+import { rawMilkService } from '../services/inventoryApi';
+import InventoryRawMilkForm from '../components/InventoryRawMilkForm';
+import './InventoryRawMaterial.css';
 
 const RawMaterial = () => {
   const [rawMilkData, setRawMilkData] = useState<RawMilk[]>([]);
@@ -258,7 +258,7 @@ const RawMaterial = () => {
 
       {/* Form Modal */}
       {showForm && (
-        <RawMilkForm
+        <InventoryRawMilkForm
           record={editingRecord}
           onSubmit={handleFormSubmit}
           onClose={() => {

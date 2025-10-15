@@ -421,4 +421,4 @@ For support, please refer to the documentation files or open an issue.
 
 **Built with ❤️ for Dairy Manufacturing Management**
 
-*Last Updated: October 8, 2025*
+*Last Updated: October 15, 2025*

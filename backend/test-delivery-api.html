@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Module API Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .test-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .api-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .api-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .endpoint {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .data-preview {
+            background: #f8f9fa;
+            border-left: 3px solid #667eea;
+            padding: 10px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+
+        .summary {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .summary h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-box .number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-box .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚚 Delivery Module API Testing</h1>
+            <p>Sri Lankan Data - Test All Endpoints</p>
+            <button class="test-button" onclick="testAllAPIs()" id="testBtn">
+                Test All APIs & Database Connection
+            </button>
+        </div>
+
+        <div class="results-grid" id="results"></div>
+
+        <div class="summary" id="summary" style="display: none;">
+            <h2>📊 Test Summary</h2>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="number" id="totalTests">0</div>
+                    <div class="label">Total Tests</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="successTests">0</div>
+                    <div class="label">Successful</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="failedTests">0</div>
+                    <div class="label">Failed</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="totalRecords">0</div>
+                    <div class="label">Total Records</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+
+        const endpoints = [
+            { name: '📦 All Deliveries', url: '/delivery/deliveries', icon: '📦' },
+            { name: '✅ Delivered Orders', url: '/delivery/deliveries/status/Delivered', icon: '✅' },
+            { name: '⏳ Pending Orders', url: '/delivery/deliveries/status/Pending', icon: '⏳' },
+            { name: '🚛 In Transit Orders', url: '/delivery/deliveries/status/In%20Transit', icon: '🚛' },
+            { name: '🚗 All Drivers', url: '/delivery/drivers', icon: '🚗' },
+            { name: '👨‍🌾 All Farmers', url: '/delivery/farmers', icon: '👨‍🌾' },
+            { name: '🥛 Milk Collections', url: '/delivery/milk-collection', icon: '🥛' },
+        ];
+
+        async function testAPI(endpoint, index) {
+            const card = document.getElementById(`card-${index}`);
+            const statusEl = card.querySelector('.status');
+            const previewEl = card.querySelector('.data-preview');
+
+            statusEl.textContent = 'Testing...';
+            statusEl.className = 'status loading';
+            previewEl.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(`${API_BASE}${endpoint.url}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    const count = Array.isArray(data.data) ? data.data.length : 1;
+                    statusEl.textContent = `✓ Success - ${count} records`;
+                    statusEl.className = 'status success';
+                    
+                    if (Array.isArray(data.data) && data.data.length > 0) {
+                        previewEl.textContent = JSON.stringify(data.data[0], null, 2);
+                    } else {
+                        previewEl.textContent = JSON.stringify(data, null, 2);
+                    }
+
+                    return { success: true, count };
+                } else {
+                    statusEl.textContent = `✗ Failed - ${response.status}`;
+                    statusEl.className = 'status error';
+                    previewEl.textContent = data.message || 'Unknown error';
+                    return { success: false, count: 0 };
+                }
+            } catch (error) {
+                statusEl.textContent = `✗ Error`;
+                statusEl.className = 'status error';
+                previewEl.textContent = error.message;
+                return { success: false, count: 0 };
+            }
+        }
+
+        async function testAllAPIs() {
+            const resultsDiv = document.getElementById('results');
+            const testBtn = document.getElementById('testBtn');
+            const summaryDiv = document.getElementById('summary');
+
+            testBtn.disabled = true;
+            testBtn.textContent = 'Testing...';
+            resultsDiv.innerHTML = '';
+            summaryDiv.style.display = 'none';
+
+            // Create cards for each endpoint
+            endpoints.forEach((endpoint, index) => {
+                const card = document.createElement('div');
+                card.className = 'api-card';
+                card.id = `card-${index}`;
+                card.innerHTML = `
+                    <h3>${endpoint.icon} ${endpoint.name}</h3>
+                    <div class="endpoint">${endpoint.url}</div>
+                    <div class="status loading">Waiting...</div>
+                    <div class="data-preview">Not tested yet</div>
+                `;
+                resultsDiv.appendChild(card);
+            });
+
+            // Test all endpoints
+            const results = [];
+            for (let i = 0; i < endpoints.length; i++) {
+                const result = await testAPI(endpoints[i], i);
+                results.push(result);
+                await new Promise(resolve => setTimeout(resolve, 100)); // Small delay between tests
+            }
+
+            // Show summary
+            const totalTests = results.length;
+            const successTests = results.filter(r => r.success).length;
+            const failedTests = results.filter(r => !r.success).length;
+            const totalRecords = results.reduce((sum, r) => sum + r.count, 0);
+
+            document.getElementById('totalTests').textContent = totalTests;
+            document.getElementById('successTests').textContent = successTests;
+            document.getElementById('failedTests').textContent = failedTests;
+            document.getElementById('totalRecords').textContent = totalRecords;
+
+            summaryDiv.style.display = 'block';
+            testBtn.disabled = false;
+            testBtn.textContent = 'Test Again';
+        }
+    </script>
+</body>
+</html>

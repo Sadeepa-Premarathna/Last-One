@@ -1,0 +1,143 @@
+import { NavLink } from 'react-router-dom';
+import { FaBox, FaChartLine, FaBrain, FaBars, FaTimes, FaShoppingCart, FaCalculator, FaMoneyBillWave, FaUsers, FaFileAlt } from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import './InventorySidebar.css';
+
+interface SidebarProps {
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+}
+
+const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
+  const menuItems = [
+    { path: '/', icon: <FaChartLine />, label: 'Inventory Dashboard' },
+    { path: '/products', icon: <FaBox />, label: 'Additional Expenses' },
+    { path: '/raw-material', icon: <FaCalculator />, label: 'Calculate Salary' },
+    { path: '/shop', icon: <FaUsers />, label: 'Allowance Management' },
+    { path: '/ai-analyzer', icon: <FaMoneyBillWave />, label: 'Revenue & Expenses' },
+    { path: '/reports', icon: <FaFileAlt />, label: 'Report Generation' }
+  ];
+
+  return (
+    <>
+      <motion.div
+        className={`modern-sidebar ${isOpen ? 'open' : 'closed'}`}
+        initial={false}
+        animate={{ width: isOpen ? 280 : 80 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="sidebar-header">
+          <motion.div
+            className="logo-container"
+            animate={{ scale: isOpen ? 1 : 0.8 }}
+            transition={{ duration: 0.3 }}
+          >
+            {isOpen ? (
+              <div className="logo-full">
+                <div className="logo-icon-wrapper">
+                  <div className="logo-gradient">
+                    <span className="logo-text-main">IP</span>
+                  </div>
+                </div>
+                <div className="logo-info">
+                  <h2 className="logo-title">Inventory Portal</h2>
+                  <p className="logo-subtitle">Dairy Manufacturing</p>
+                </div>
+              </div>
+            ) : (
+              <div className="logo-small">
+                <div className="logo-gradient-small">
+                  <span className="logo-text-small">IP</span>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </div>
+
+        <nav className="sidebar-navigation">
+          {menuItems.map((item, index) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `nav-item ${isActive ? 'active' : ''}`
+              }
+            >
+              <motion.div
+                className="nav-content"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ x: 5 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <div className="nav-icon-container">
+                  <span className="nav-icon">{item.icon}</span>
+                </div>
+                {isOpen && (
+                  <motion.span 
+                    className="nav-label"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    {item.label}
+                  </motion.span>
+                )}
+                {!isOpen && (
+                  <div className="tooltip">
+                    {item.label}
+                  </div>
+                )}
+              </motion.div>
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">
+          <button
+            className="toggle-button"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <motion.div
+              animate={{ rotate: isOpen ? 180 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {isOpen ? <FaTimes /> : <FaBars />}
+            </motion.div>
+          </button>
+        </div>
+      </motion.div>
+    </>
+  );
+};
+
+        <div className="sidebar-footer">
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="company-info"
+            >
+              <p>Sri Lanka's Premier</p>
+              <p>Dairy Solutions</p>
+            </motion.div>
+          )}
+        </div>
+      </motion.div>
+
+      {isOpen && (
+        <motion.div
+          className="sidebar-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+    </>
+  );
+};
+
+export default Sidebar;

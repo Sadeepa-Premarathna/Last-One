@@ -1,0 +1,70 @@
+.rawmilk-modal {
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.rawmilk-form .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.rawmilk-form .form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.rawmilk-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rawmilk-form label {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 14px;
+}
+
+.rawmilk-form input,
+.rawmilk-form select,
+.rawmilk-form textarea {
+  padding: 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Poppins', sans-serif;
+  transition: all 0.3s ease;
+}
+
+.rawmilk-form input:focus,
+.rawmilk-form select:focus,
+.rawmilk-form textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.rawmilk-form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.rawmilk-form .error {
+  color: #e53e3e;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .rawmilk-modal {
+    max-width: 95%;
+    margin: 20px;
+  }
+
+  .rawmilk-form .form-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+}
